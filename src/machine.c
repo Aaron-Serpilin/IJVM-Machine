@@ -25,6 +25,11 @@ int init_ijvm(char *binary_path)
   in = stdin;
   out = stdout;
   // TODO: implement me
+  FILE* starting_file_pointer = fopen(binary_path, "rb");
+  word_t file_header;
+  fread(&file_header, 1, 4, starting_file_pointer);
+  dprintf("The file header is %d\n", file_header);
+
   return -1;
 }
 
