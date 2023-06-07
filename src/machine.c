@@ -10,6 +10,12 @@ FILE *in;   // use fgetc(in) to get a character from in.
             // This will return EOF if no char is available.
 FILE *out;  // use for example fprintf(out, "%c", value); to print value to out
 
+// Global variables to free space after allocating each time in destroy_ijvm
+word_t* initial_data_chunks;
+word_t* pool_data;
+int* text_size;
+byte_t* text_data;
+
 struct {
 
   word_t header;
@@ -18,7 +24,14 @@ struct {
   int text_size;
   byte_t* text_data;
 
-} ijvm_machine;
+} IJVM_machine;
+
+struct {
+
+  int program_counter;
+  word_t* stack_list;
+
+} Stack;
 
 void set_input(FILE *fp) 
 { 
@@ -42,7 +55,7 @@ int init_ijvm(char *binary_path)
     return 1;
   }
 
-  word_t* initial_data_chunks = malloc(sizeof(int) * 12); //Stores the header, pool origin, and pool size
+  initial_data_chunks = malloc(sizeof(int) * 12); //Stores the header, pool origin, and pool size
 
   fread(initial_data_chunks, 4, 3, file_pointer); //I read first 3 chunks of 4 bytes
 
@@ -52,28 +65,28 @@ int init_ijvm(char *binary_path)
 
   };
 
-  ijvm_machine.header = initial_data_chunks[0];
+  IJVM_machine.header = initial_data_chunks[0];
 
-  if (ijvm_machine.header != 0x1deadfad) {
+  if (IJVM_machine.header != 0x1deadfad) {
     dprintf("Header is incorrect\n");
     return -1;
   }
 
-  ijvm_machine.constant_pool_size = initial_data_chunks[2];
+  IJVM_machine.constant_pool_size = initial_data_chunks[2];
 
-  word_t* pool_data = calloc(ijvm_machine.constant_pool_size/2, 4); //Allocate 4 bytes of memory the pool size number of elements
+  pool_data = calloc(IJVM_machine.constant_pool_size/2, 4); //Allocate 4 bytes of memory the pool size number of elements
 
-  fread(pool_data, 4, ijvm_machine.constant_pool_size/4, file_pointer); // I read then all the pool data chunks of 4 bytes
+  fread(pool_data, 4, IJVM_machine.constant_pool_size/4, file_pointer); // I read then all the pool data chunks of 4 bytes
 
-  for (int i = 0; i < ijvm_machine.constant_pool_size/4; i++) {
+  for (int i = 0; i < IJVM_machine.constant_pool_size/4; i++) {
 
     pool_data[i] = swap_uint32(pool_data[i]);
 
   }
 
-  ijvm_machine.constant_pool_data = pool_data; //The data has (pool_size/4) elements, and each element has 4 bytes. Can be printed in %02X
+  IJVM_machine.constant_pool_data = pool_data; //The data has (pool_size/4) elements, and each element has 4 bytes. Can be printed in %02X
 
-  int* text_size = calloc(4, 1);
+  text_size = calloc(4, 1);
 
   fread(text_size, 4, 2, file_pointer); //I read the 2 chunks of 4 bytes about the text size
 
@@ -81,25 +94,25 @@ int init_ijvm(char *binary_path)
     text_size[i] = swap_uint32(text_size[i]);
   }
 
-  ijvm_machine.text_size = text_size[1];
+  IJVM_machine.text_size = text_size[1];
 
-  byte_t* text_data = calloc(ijvm_machine.text_size/4, 4);
+  text_data = calloc(IJVM_machine.text_size/4, 4);
 
-  fread(text_data, 4, ijvm_machine.text_size, file_pointer);
+  fread(text_data, 4, IJVM_machine.text_size, file_pointer);
 
-  ijvm_machine.text_data = text_data; //It has size bytes and size elements
+  IJVM_machine.text_data = text_data; //It has size bytes and size elements
 
-  // dprintf("The header is %02X\n", ijvm_machine.header);
-  // dprintf("The pool size is %d\n", ijvm_machine.constant_pool_size);
+  // dprintf("The header is %02X\n", IJVM_machine.header);
+  // dprintf("The pool size is %d\n", IJVM_machine.constant_pool_size);
 
-  // for (int i = 0; i < ijvm_machine.constant_pool_size/4; i++) {
-  //   dprintf("The %d pool data element is %02X\n", i, ijvm_machine.constant_pool_data[i]); 
+  // for (int i = 0; i < IJVM_machine.constant_pool_size/4; i++) {
+  //   dprintf("The %d pool data element is %02X\n", i, IJVM_machine.constant_pool_data[i]); 
   // };
   
-  // dprintf("The text size is %d\n", ijvm_machine.text_size);
+  // dprintf("The text size is %d\n", IJVM_machine.text_size);
 
-  // for (int i = 0; i < ijvm_machine.text_size; i++) {
-  //   dprintf("The %d text data element is %02X\n", i, ijvm_machine.text_data[i]);
+  // for (int i = 0; i < IJVM_machine.text_size; i++) {
+  //   dprintf("The %d text data element is %02X\n", i, IJVM_machine.text_data[i]);
   // };
 
   fclose(file_pointer);
@@ -110,32 +123,35 @@ int init_ijvm(char *binary_path)
 void destroy_ijvm(void) 
 {
   // TODO: implement me
+  free(initial_data_chunks);
+  free(pool_data);
+  free(text_size);
+  free(text_data);
 }
 
 byte_t *get_text(void) 
 {
-  return ijvm_machine.text_data;
+  return IJVM_machine.text_data;
 }
 
 unsigned int get_text_size(void) 
 {
-  return ijvm_machine.text_size;
+  return IJVM_machine.text_size;
 }
 
 word_t get_constant(int i) 
 {
-  return ijvm_machine.constant_pool_data[i];
+  return IJVM_machine.constant_pool_data[i];
 }
 
 unsigned int get_program_counter(void) 
 {
-  // TODO: implement me
-  return 0;
+  return Stack.program_counter;
 }
 
 word_t tos(void) 
 {
-  // this operation should NOT pop (remove top element from stack)
+  // this operation should NOT pop (remove top element from Stack)
   // TODO: implement me
   return -1;
 }
@@ -152,9 +168,74 @@ word_t get_local_variable(int i)
   return 0;
 }
 
-void step(void) 
-{
-  // TODO: implement me
+void step(void) //Executes the current instruction
+{  
+  int instruction_size = get_text_size();
+  Stack.program_counter = 0;
+  Stack.stack_list = (word_t*) malloc(instruction_size);
+
+  dprintf("The set size is %d\n", instruction_size);
+
+  for (int i = 0; i < instruction_size; i++) { 
+
+    int instruction = (get_text())[i]; //Fetches byte by byte of the instruction set
+    int next_instruction = (get_text())[i+1];
+    int stack_index = 0;
+    dprintf("The %d byte of the instruction is %02X\n", i, instruction);
+
+    switch(instruction) {
+
+      case OP_ERR: //OPCODE 0XFE
+        dprintf("An error has occurred\n");
+        break;
+      case OP_NOP: //OPCODE 0X00
+        break;
+      case OP_BIPUSH: //OPCODE 0X10
+        Stack.stack_list[stack_index] = next_instruction;
+        dprintf("The next instruction is %02X, which means %d\n", next_instruction, next_instruction);
+        stack_index++;
+        i++;
+        Stack.program_counter++;
+        break;
+      case OP_DUP: //OPCODE 0X59
+        Stack.program_counter++;
+        break;
+      case OP_IADD: //OPCODE 0X60
+        Stack.program_counter++;
+        break;
+      case OP_ISUB: //OPCODE 0X64
+        Stack.program_counter++;
+        break;
+      case OP_IAND: //OPCODE 0XIE
+        Stack.program_counter++;
+        break;
+      case OP_IOR: //OPCODE 0XB0
+        Stack.program_counter++;
+        break;
+      case OP_POP: //OPCODE 0X57
+        Stack.program_counter++;
+        break;
+      case OP_SWAP: //OPCODE 0X5F
+        Stack.program_counter++;
+        break;
+      case OP_HALT: //OPCODE 0XFF
+        Stack.program_counter++;
+        break;
+      case OP_IN: //OPCODE 0XFC
+        Stack.program_counter++;
+        break;
+      case OP_OUT: //OPCODE 0XFD
+        Stack.program_counter++;
+        break;
+      default:
+        dprintf("Incorrect instruction architecture\n");
+        break;
+
+    }
+
+    dprintf("The counter is %d\n", Stack.program_counter);
+
+  }
 
 }
 
