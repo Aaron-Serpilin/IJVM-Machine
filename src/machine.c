@@ -29,6 +29,7 @@ struct {
 struct {
 
   int program_counter;
+  int top_stack_index;
   word_t* stack_list;
 
 } Stack;
@@ -153,7 +154,7 @@ word_t tos(void)
 {
   // this operation should NOT pop (remove top element from Stack)
   // TODO: implement me
-  return -1;
+  return Stack.stack_list[Stack.top_stack_index];
 }
 
 bool finished(void) 
@@ -172,16 +173,21 @@ void step(void) //Executes the current instruction
 {  
   int instruction_size = get_text_size();
   Stack.program_counter = 0;
-  Stack.stack_list = (word_t*) malloc(instruction_size);
+  Stack.stack_list = (word_t*) malloc(instruction_size * 1024);
+
+  int stack_top_index = 0;
+  Stack.top_stack_index = stack_top_index;
 
   dprintf("The set size is %d\n", instruction_size);
 
   for (int i = 0; i < instruction_size; i++) { 
 
-    int instruction = (get_text())[i]; //Fetches byte by byte of the instruction set
-    int next_instruction = (get_text())[i+1];
-    int stack_index = 0;
+    word_t instruction = (get_text())[i]; //Fetches byte by byte of the instruction set
+    word_t next_instruction = (get_text())[i+1];
+
     dprintf("The %d byte of the instruction is %02X\n", i, instruction);
+
+    dprintf("The stack index is %d\n", stack_top_index);
 
     switch(instruction) {
 
@@ -191,13 +197,15 @@ void step(void) //Executes the current instruction
       case OP_NOP: //OPCODE 0X00
         break;
       case OP_BIPUSH: //OPCODE 0X10
-        Stack.stack_list[stack_index] = next_instruction;
-        dprintf("The next instruction is %02X, which means %d\n", next_instruction, next_instruction);
-        stack_index++;
+        Stack.stack_list[stack_top_index] = next_instruction;
+        //dprintf("Value %d has been added to the stack_list as %02X.\nHere is the value in the stack: %02X\n",next_instruction, next_instruction, Stack.stack_list[stack_top_index]);
+        stack_top_index++;
         i++;
         Stack.program_counter++;
         break;
       case OP_DUP: //OPCODE 0X59
+        Stack.stack_list[stack_top_index+1] = Stack.stack_list[stack_top_index];
+        stack_top_index++;
         Stack.program_counter++;
         break;
       case OP_IADD: //OPCODE 0X60
@@ -233,7 +241,11 @@ void step(void) //Executes the current instruction
 
     }
 
-    dprintf("The counter is %d\n", Stack.program_counter);
+    // dprintf("The counter is %d\n", Stack.program_counter);
+    // dprintf("The 2A value is %02X\n", Stack.stack_list[stack_top_index]);
+    for (int i = 0; i < 4; i++) {
+      dprintf("The %d element of the stack is %02X\n", i, Stack.stack_list[i]);
+    }
 
   }
 
