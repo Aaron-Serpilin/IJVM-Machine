@@ -16,7 +16,7 @@ struct {
   int constant_pool_size;
   word_t* constant_pool_data;
   int text_size;
-  word_t* text_data;
+  byte_t* text_data;
 
 } ijvm_machine;
 
@@ -35,38 +35,35 @@ int init_ijvm(char *binary_path)
 
   in = stdin;
   out = stdout;
-  // TODO: implement me
-  FILE* starting_file_pointer = fopen(binary_path, "rb");
+  FILE* file_pointer = fopen(binary_path, "rb");
 
-  if (starting_file_pointer == NULL) {
+  if (file_pointer == NULL) {
     dprintf("Input file cannot be opened\n");
     return 1;
   }
 
-  word_t* machine_data_array = malloc(sizeof(int) * 12); //Stores the header, pool origin, and pool size
+  word_t* initial_data_chunks = malloc(sizeof(int) * 12); //Stores the header, pool origin, and pool size
 
-  fread(machine_data_array, 4, 3, starting_file_pointer); //I read first 3 chunks of 4 bytes
+  fread(initial_data_chunks, 4, 3, file_pointer); //I read first 3 chunks of 4 bytes
 
   for (int i = 0; i < 3; i++) {
     
-    machine_data_array[i] = swap_uint32(machine_data_array[i]);
+    initial_data_chunks[i] = swap_uint32(initial_data_chunks[i]);
 
   };
 
-  ijvm_machine.header = machine_data_array[0];
+  ijvm_machine.header = initial_data_chunks[0];
 
-  if (ijvm_machine.header == 0x1deadfad) {
-    dprintf("Header is correct\n");
-  } else {
-    dprintf("Incorrect header\n");
+  if (ijvm_machine.header != 0x1deadfad) {
+    dprintf("Header is incorrect\n");
     return -1;
   }
 
-  ijvm_machine.constant_pool_size = machine_data_array[2];
+  ijvm_machine.constant_pool_size = initial_data_chunks[2];
 
   word_t* pool_data = calloc(ijvm_machine.constant_pool_size/2, 4); //Allocate 4 bytes of memory the pool size number of elements
 
-  fread(pool_data, 4, ijvm_machine.constant_pool_size/4, starting_file_pointer); // I read then all the pool data chunks of 4 bytes
+  fread(pool_data, 4, ijvm_machine.constant_pool_size/4, file_pointer); // I read then all the pool data chunks of 4 bytes
 
   for (int i = 0; i < ijvm_machine.constant_pool_size/4; i++) {
 
@@ -78,7 +75,7 @@ int init_ijvm(char *binary_path)
 
   int* text_size = calloc(4, 1);
 
-  fread(text_size, 4, 2, starting_file_pointer); //I read the 2 chunks of 4 bytes about the text size
+  fread(text_size, 4, 2, file_pointer); //I read the 2 chunks of 4 bytes about the text size
 
   for (int i = 0; i < 2; i++) {
     text_size[i] = swap_uint32(text_size[i]);
@@ -86,15 +83,11 @@ int init_ijvm(char *binary_path)
 
   ijvm_machine.text_size = text_size[1];
 
-  word_t* text_data = calloc(ijvm_machine.text_size/4, 4);
+  byte_t* text_data = calloc(ijvm_machine.text_size/4, 4);
 
-  fread(text_data, 2, ijvm_machine.text_size, starting_file_pointer);
+  fread(text_data, 4, ijvm_machine.text_size, file_pointer);
 
-  for (int i = 0; i < ijvm_machine.text_size/2; i++) {
-    text_data[i] = swap_uint32(text_data[i]);
-  }
-
-  ijvm_machine.text_data = text_data; //It has size bytes and (size/4) elements
+  ijvm_machine.text_data = text_data; //It has size bytes and size elements
 
   // dprintf("The header is %02X\n", ijvm_machine.header);
   // dprintf("The pool size is %d\n", ijvm_machine.constant_pool_size);
@@ -105,13 +98,13 @@ int init_ijvm(char *binary_path)
   
   // dprintf("The text size is %d\n", ijvm_machine.text_size);
 
-  // for (int i = 0; i < ijvm_machine.text_size/3; i++) {
+  // for (int i = 0; i < ijvm_machine.text_size; i++) {
   //   dprintf("The %d text data element is %02X\n", i, ijvm_machine.text_data[i]);
   // };
 
-  fclose(starting_file_pointer);
+  fclose(file_pointer);
   
-  return -1;
+  return 0;
 }
 
 void destroy_ijvm(void) 
@@ -121,20 +114,17 @@ void destroy_ijvm(void)
 
 byte_t *get_text(void) 
 {
-  // TODO: implement me
-  return NULL;
+  return ijvm_machine.text_data;
 }
 
 unsigned int get_text_size(void) 
 {
-  // TODO: implement me
-  return 0;
+  return ijvm_machine.text_size;
 }
 
 word_t get_constant(int i) 
 {
-  // TODO: implement me
-  return 0;
+  return ijvm_machine.constant_pool_data[i];
 }
 
 unsigned int get_program_counter(void) 
