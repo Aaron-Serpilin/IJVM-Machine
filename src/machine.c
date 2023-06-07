@@ -23,6 +23,7 @@ struct {
   word_t* constant_pool_data;
   int text_size;
   byte_t* text_data;
+  //Stack* current_stack;
 
 } IJVM_machine;
 
@@ -30,6 +31,7 @@ struct {
 
   int program_counter;
   int top_stack_index;
+  bool finished_stack;
   word_t* stack_list;
 
 } Stack;
@@ -46,7 +48,7 @@ void set_output(FILE *fp)
 
 int init_ijvm(char *binary_path) 
 {
-
+  //To avoid memory leaks, important to allocate and read the same number of bytes
   in = stdin;
   out = stdout;
   FILE* file_pointer = fopen(binary_path, "rb");
@@ -56,9 +58,9 @@ int init_ijvm(char *binary_path)
     return 1;
   }
 
-  initial_data_chunks = malloc(sizeof(int) * 12); //Stores the header, pool origin, and pool size
+  word_t* initial_data_chunks = malloc(sizeof(int) * 12); //Stores the header, pool origin, and pool size
 
-  fread(initial_data_chunks, 4, 3, file_pointer); //I read first 3 chunks of 4 bytes
+  fread(initial_data_chunks, sizeof(word_t), 3, file_pointer); //I read first 3 chunks of 4 bytes
 
   for (int i = 0; i < 3; i++) {
     
@@ -75,9 +77,9 @@ int init_ijvm(char *binary_path)
 
   IJVM_machine.constant_pool_size = initial_data_chunks[2];
 
-  pool_data = calloc(IJVM_machine.constant_pool_size/2, 4); //Allocate 4 bytes of memory the pool size number of elements
+  pool_data = malloc(sizeof(word_t) * (IJVM_machine.constant_pool_size/4)); //Allocate 4 bytes of memory the pool size number of elements
 
-  fread(pool_data, 4, IJVM_machine.constant_pool_size/4, file_pointer); // I read then all the pool data chunks of 4 bytes
+  fread(pool_data, sizeof(word_t), IJVM_machine.constant_pool_size/4, file_pointer); // I read then all the pool data chunks of 4 bytes
 
   for (int i = 0; i < IJVM_machine.constant_pool_size/4; i++) {
 
@@ -87,9 +89,9 @@ int init_ijvm(char *binary_path)
 
   IJVM_machine.constant_pool_data = pool_data; //The data has (pool_size/4) elements, and each element has 4 bytes. Can be printed in %02X
 
-  text_size = calloc(4, 1);
+  text_size = malloc(sizeof(word_t) * 2); //The 2 is due to the 2 chunks of data that make up the text size
 
-  fread(text_size, 4, 2, file_pointer); //I read the 2 chunks of 4 bytes about the text size
+  fread(text_size, 2, sizeof(word_t), file_pointer); //I read the 2 chunks of 4 bytes about the text size
 
   for (int i = 0; i < 2; i++) {
     text_size[i] = swap_uint32(text_size[i]);
@@ -97,9 +99,9 @@ int init_ijvm(char *binary_path)
 
   IJVM_machine.text_size = text_size[1];
 
-  text_data = calloc(IJVM_machine.text_size/4, 4);
+  text_data = malloc(sizeof(word_t) * (IJVM_machine.text_size));
 
-  fread(text_data, 4, IJVM_machine.text_size, file_pointer);
+  fread(text_data, sizeof(word_t), IJVM_machine.text_size, file_pointer); 
 
   IJVM_machine.text_data = text_data; //It has size bytes and size elements
 
@@ -117,6 +119,10 @@ int init_ijvm(char *binary_path)
   // };
 
   fclose(file_pointer);
+
+  Stack.program_counter = 0;
+  Stack.top_stack_index = 0;
+  Stack.finished_stack = false;
   
   return 0;
 }
@@ -160,7 +166,7 @@ word_t tos(void)
 bool finished(void) 
 {
   // TODO: implement me
-  return false;
+  return Stack.finished_stack;
 }
 
 word_t get_local_variable(int i) 
@@ -169,85 +175,81 @@ word_t get_local_variable(int i)
   return 0;
 }
 
+
 void step(void) //Executes the current instruction
 {  
   int instruction_size = get_text_size();
-  Stack.program_counter = 0;
   Stack.stack_list = (word_t*) malloc(instruction_size * 1024);
 
-  int stack_top_index = 0;
-  Stack.top_stack_index = stack_top_index;
+  //dprintf("The set size is %d\n", instruction_size);
 
-  dprintf("The set size is %d\n", instruction_size);
+  word_t instruction = (get_text())[Stack.program_counter]; //Fetches byte by byte of the instruction set
 
-  for (int i = 0; i < instruction_size; i++) { 
+  //dprintf("The %d byte of the instruction is %02X\n", Stack.program_counter, instruction);
 
-    word_t instruction = (get_text())[i]; //Fetches byte by byte of the instruction set
-    word_t next_instruction = (get_text())[i+1];
+  // dprintf("The stack index is %d\n", Stack.top_stack_index);
+  // dprintf("The counter is %d\n", Stack.program_counter);
 
-    dprintf("The %d byte of the instruction is %02X\n", i, instruction);
+  switch(instruction) {
 
-    dprintf("The stack index is %d\n", stack_top_index);
-
-    switch(instruction) {
-
-      case OP_ERR: //OPCODE 0XFE
-        dprintf("An error has occurred\n");
+    case OP_ERR: //OPCODE 0XFE
+      dprintf("An error has occurred\n");
+      Stack.finished_stack = true;
+      break;
+    case OP_NOP: //OPCODE 0X00
+      break;
+    case OP_BIPUSH: //OPCODE 0X10
+      {
+        int8_t instruction_value = get_text()[Stack.program_counter+1];
+        word_t extended_next_instruction = (word_t)instruction_value;
+        Stack.stack_list[Stack.top_stack_index] = extended_next_instruction;
+        //dprintf("Value %d has been added to the stack_list as %02X.\nHere is the value in the stack: %02X\n",instruction_value, instruction_value, Stack.stack_list[Stack.top_stack_index]);
+        //Stack.top_stack_index++;
+        Stack.program_counter += 2;
         break;
-      case OP_NOP: //OPCODE 0X00
-        break;
-      case OP_BIPUSH: //OPCODE 0X10
-        Stack.stack_list[stack_top_index] = next_instruction;
-        //dprintf("Value %d has been added to the stack_list as %02X.\nHere is the value in the stack: %02X\n",next_instruction, next_instruction, Stack.stack_list[stack_top_index]);
-        stack_top_index++;
-        i++;
-        Stack.program_counter++;
-        break;
-      case OP_DUP: //OPCODE 0X59
-        Stack.stack_list[stack_top_index+1] = Stack.stack_list[stack_top_index];
-        stack_top_index++;
-        Stack.program_counter++;
-        break;
-      case OP_IADD: //OPCODE 0X60
-        Stack.program_counter++;
-        break;
-      case OP_ISUB: //OPCODE 0X64
-        Stack.program_counter++;
-        break;
-      case OP_IAND: //OPCODE 0XIE
-        Stack.program_counter++;
-        break;
-      case OP_IOR: //OPCODE 0XB0
-        Stack.program_counter++;
-        break;
-      case OP_POP: //OPCODE 0X57
-        Stack.program_counter++;
-        break;
-      case OP_SWAP: //OPCODE 0X5F
-        Stack.program_counter++;
-        break;
-      case OP_HALT: //OPCODE 0XFF
-        Stack.program_counter++;
-        break;
-      case OP_IN: //OPCODE 0XFC
-        Stack.program_counter++;
-        break;
-      case OP_OUT: //OPCODE 0XFD
-        Stack.program_counter++;
-        break;
-      default:
-        dprintf("Incorrect instruction architecture\n");
-        break;
-
-    }
-
-    // dprintf("The counter is %d\n", Stack.program_counter);
-    // dprintf("The 2A value is %02X\n", Stack.stack_list[stack_top_index]);
-    for (int i = 0; i < 4; i++) {
-      dprintf("The %d element of the stack is %02X\n", i, Stack.stack_list[i]);
-    }
+      }
+    case OP_DUP: //OPCODE 0X59
+      //Stack.stack_list[Stack.top_stack_index+1] = Stack.stack_list[Stack.top_stack_index];
+      //Stack.top_stack_index++;
+      Stack.program_counter++;
+      break;
+    case OP_IADD: //OPCODE 0X60
+      Stack.program_counter++;
+      break;
+    case OP_ISUB: //OPCODE 0X64
+      Stack.program_counter++;
+      break;
+    case OP_IAND: //OPCODE 0XIE
+      Stack.program_counter++;
+      break;
+    case OP_IOR: //OPCODE 0XB0
+      Stack.program_counter++;
+      break;
+    case OP_POP: //OPCODE 0X57
+      Stack.program_counter++;
+      break;
+    case OP_SWAP: //OPCODE 0X5F
+      Stack.program_counter++;
+      break;
+    case OP_HALT: //OPCODE 0XFF
+      Stack.finished_stack = true;
+      break;
+    case OP_IN: //OPCODE 0XFC
+      Stack.program_counter++;
+      break;
+    case OP_OUT: //OPCODE 0XFD
+      Stack.program_counter++;
+      break;
+    default:
+      dprintf("Incorrect instruction architecture\n");
+      break;
 
   }
+
+  //dprintf("The 2A value is %02X\n", Stack.stack_list[Stack.top_stack_index]);
+  // for (int i = 0; i < instruction_size; i++) {
+  //   dprintf("The %d element of the stack is %02X\n", i, Stack.stack_list[i]);
+  // }
 
 }
 
