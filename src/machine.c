@@ -10,6 +10,16 @@ FILE *in;   // use fgetc(in) to get a character from in.
             // This will return EOF if no char is available.
 FILE *out;  // use for example fprintf(out, "%c", value); to print value to out
 
+struct {
+
+  word_t header;
+  int constant_pool_size;
+  word_t* constant_pool_data;
+  int text_size;
+  word_t* text_data;
+
+} ijvm_machine;
+
 void set_input(FILE *fp) 
 { 
   in = fp; 
@@ -22,14 +32,82 @@ void set_output(FILE *fp)
 
 int init_ijvm(char *binary_path) 
 {
+
   in = stdin;
   out = stdout;
   // TODO: implement me
   FILE* starting_file_pointer = fopen(binary_path, "rb");
-  word_t file_header;
-  fread(&file_header, 1, 4, starting_file_pointer);
-  dprintf("The file header is %d\n", file_header);
 
+  if (starting_file_pointer == NULL) {
+    dprintf("Input file cannot be opened\n");
+    return 1;
+  }
+
+  word_t machine_data_array[3]; //Stores the header, pool origin, and pool size
+
+  fread(machine_data_array, 4, 3, starting_file_pointer);
+
+  for (int i = 0; i < 3; i++) {
+    
+    machine_data_array[i] = swap_uint32(machine_data_array[i]);
+
+  };
+
+  ijvm_machine.header = machine_data_array[0];
+
+  if (ijvm_machine.header == 0x1deadfad) {
+    dprintf("Header is correct\n");
+  } else {
+    dprintf("Incorrect header\n");
+    return -1;
+  }
+
+  ijvm_machine.constant_pool_size = machine_data_array[2];
+
+  word_t* pool_data = calloc(ijvm_machine.constant_pool_size/4, 4); //Allocate 4 bytes of memory the pool size number of elements
+
+  fread(pool_data, 4, ijvm_machine.constant_pool_size/8, starting_file_pointer);
+  // fread(pool_data, 4, ijvm_machine.constant_pool_size/4, starting_file_pointer);
+
+  dprintf("The pool size is %d\n", ijvm_machine.constant_pool_size);
+
+  for (int i = 0; i < ijvm_machine.constant_pool_size/4; i++) {
+
+    pool_data[i] = swap_uint32(pool_data[i]);
+
+  }
+
+  ijvm_machine.constant_pool_data = pool_data;
+
+  int* text_size = calloc(4, 4);
+  
+  dprintf("The header is %02X\n", ijvm_machine.header);
+  dprintf("The pool size is %d\n", ijvm_machine.constant_pool_size);
+  dprintf("The first part of the pool data is %02X\n", ijvm_machine.constant_pool_data[0]);
+  dprintf("The second part of the pool data is %02X\n", ijvm_machine.constant_pool_data[1]);
+  dprintf("The third part of the pool data is %02X\n", ijvm_machine.constant_pool_data[2]);
+  // dprintf("The header is %02x\n", machine_data_array[0]);
+  // dprintf("The origin is %02X\n", machine_data_array[1]);
+  // dprintf("The size is %d\n", machine_data_array[2]);
+
+  
+  /* --- Loop --- */
+
+  // int individual_bytes;
+  // int* byte_array = malloc(sizeof(int) * 5);
+ 
+  // for (int i = 0; (individual_bytes = getc(starting_file_pointer)) != EOF; i++) {
+  //   dprintf("%02X", individual_bytes);
+
+  //       if (i % 4 == 3) // Guarantees each line is 8 characters/4 bytes
+  //           putc('\n', out); 
+  // }
+
+  // dprintf("\n");
+  //return -1;
+
+  fclose(starting_file_pointer);
+  
   return -1;
 }
 
