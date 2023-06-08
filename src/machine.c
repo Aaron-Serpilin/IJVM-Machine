@@ -2,7 +2,8 @@
 #include <stdlib.h> // malloc, free
 #include "ijvm.h"
 #include "util.h" // read this file for debug prints, endianness helper functions
-
+#include "structs.h" //here is the ijvm and stack structs
+#include "stack_functions.h" //pop and push functions
 
 // see ijvm.h for descriptions of the below functions
 
@@ -15,26 +16,6 @@ word_t* initial_data_chunks;
 word_t* pool_data;
 int* text_size;
 byte_t* text_data;
-
-struct {
-
-  word_t header;
-  int constant_pool_size;
-  word_t* constant_pool_data;
-  int text_size;
-  byte_t* text_data;
-  //Stack* current_stack;
-
-} IJVM_machine;
-
-struct {
-
-  int program_counter;
-  int top_stack_index;
-  bool finished_stack;
-  word_t* stack_list;
-
-} Stack;
 
 void set_input(FILE *fp) 
 { 
@@ -120,8 +101,10 @@ int init_ijvm(char *binary_path)
 
   fclose(file_pointer);
 
+  Stack.max_stack_size = 1024;
+  Stack.stack_list = (word_t*) malloc(get_text_size() * Stack.max_stack_size);
   Stack.program_counter = 0;
-  Stack.top_stack_index = 0;
+  Stack.current_stack_size = -1;
   Stack.finished_stack = false;
   
   return 0;
@@ -160,7 +143,7 @@ word_t tos(void)
 {
   // this operation should NOT pop (remove top element from Stack)
   // TODO: implement me
-  return Stack.stack_list[Stack.top_stack_index];
+  return Stack.stack_list[Stack.current_stack_size];
 }
 
 bool finished(void) 
@@ -175,20 +158,10 @@ word_t get_local_variable(int i)
   return 0;
 }
 
-
 void step(void) //Executes the current instruction
 {  
-  int instruction_size = get_text_size();
-  Stack.stack_list = (word_t*) malloc(instruction_size * 1024);
-
-  //dprintf("The set size is %d\n", instruction_size);
-
+  //int instruction_size = get_text_size();
   word_t instruction = (get_text())[Stack.program_counter]; //Fetches byte by byte of the instruction set
-
-  //dprintf("The %d byte of the instruction is %02X\n", Stack.program_counter, instruction);
-
-  // dprintf("The stack index is %d\n", Stack.top_stack_index);
-  // dprintf("The counter is %d\n", Stack.program_counter);
 
   switch(instruction) {
 
@@ -196,58 +169,78 @@ void step(void) //Executes the current instruction
       dprintf("An error has occurred\n");
       Stack.finished_stack = true;
       break;
+
     case OP_NOP: //OPCODE 0X00
       break;
+
     case OP_BIPUSH: //OPCODE 0X10
       {
+        //dprintf("The index is %d and the counter is %d\n", Stack.current_stack_size, Stack.program_counter);
+        Stack.current_stack_size++;
         int8_t instruction_value = get_text()[Stack.program_counter+1];
-        word_t extended_next_instruction = (word_t)instruction_value;
-        Stack.stack_list[Stack.top_stack_index] = extended_next_instruction;
-        //dprintf("Value %d has been added to the stack_list as %02X.\nHere is the value in the stack: %02X\n",instruction_value, instruction_value, Stack.stack_list[Stack.top_stack_index]);
-        //Stack.top_stack_index++;
+        word_t extended_instruction_value = (word_t)instruction_value;
+        Stack.stack_list[Stack.current_stack_size] = extended_instruction_value;
         Stack.program_counter += 2;
+
         break;
       }
+
     case OP_DUP: //OPCODE 0X59
-      //Stack.stack_list[Stack.top_stack_index+1] = Stack.stack_list[Stack.top_stack_index];
-      //Stack.top_stack_index++;
-      Stack.program_counter++;
+      //Stack.stack_list[Stack.current_stack_size+1] = Stack.stack_list[Stack.current_stack_size];
+      //Stack.current_stack_size++;
+      //Stack.program_counter++;
       break;
+
     case OP_IADD: //OPCODE 0X60
-      Stack.program_counter++;
-      break;
+      {
+        word_t top_value = pop();
+        word_t new_top_value = pop();
+        word_t summation_value = top_value + new_top_value;
+        push(summation_value);
+        Stack.program_counter++;
+        break;
+      }
+
     case OP_ISUB: //OPCODE 0X64
       Stack.program_counter++;
       break;
+
     case OP_IAND: //OPCODE 0XIE
       Stack.program_counter++;
       break;
+
     case OP_IOR: //OPCODE 0XB0
       Stack.program_counter++;
       break;
+
     case OP_POP: //OPCODE 0X57
       Stack.program_counter++;
       break;
+
     case OP_SWAP: //OPCODE 0X5F
       Stack.program_counter++;
       break;
+
     case OP_HALT: //OPCODE 0XFF
       Stack.finished_stack = true;
       break;
+
     case OP_IN: //OPCODE 0XFC
       Stack.program_counter++;
       break;
+
     case OP_OUT: //OPCODE 0XFD
       Stack.program_counter++;
       break;
+
     default:
       dprintf("Incorrect instruction architecture\n");
       break;
 
   }
 
-  //dprintf("The 2A value is %02X\n", Stack.stack_list[Stack.top_stack_index]);
-  // for (int i = 0; i < instruction_size; i++) {
+  // dprintf("The value is %02X\n", Stack.stack_list[Stack.current_stack_size]);
+  // for (int i = 0; i < Stack.program_counter/2; i++) {
   //   dprintf("The %d element of the stack is %02X\n", i, Stack.stack_list[i]);
   // }
 
