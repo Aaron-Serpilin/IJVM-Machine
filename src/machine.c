@@ -4,6 +4,7 @@
 #include "util.h" // read this file for debug prints, endianness helper functions
 #include "structs.h" //here is the ijvm and stack structs
 #include "stack_functions.h" //pop and push functions
+#include "instructions.h" //instruction set functions
 
 // see ijvm.h for descriptions of the below functions
 
@@ -166,86 +167,40 @@ void step(void) //Executes the current instruction
   switch(instruction) {
 
     case OP_ERR: //OPCODE 0XFE
-      dprintf("An error has occurred\n");
-      Stack.finished_stack = true;
+      error();
       break;
 
     case OP_BIPUSH: //OPCODE 0X10
-      {
-        //dprintf("The index is %d and the counter is %d\n", Stack.current_stack_size, Stack.program_counter);
-        Stack.current_stack_size++;
-        int8_t instruction_value = get_text()[Stack.program_counter+1];
-        word_t extended_instruction_value = (word_t)instruction_value;
-        Stack.stack_list[Stack.current_stack_size] = extended_instruction_value;
-        Stack.program_counter += 2;
-        break;
-      }
+      bi_push();
+      break;
 
     case OP_DUP: //OPCODE 0X59
-      {
-        word_t top_value = Stack.stack_list[Stack.current_stack_size]; 
-        Stack.current_stack_size++;
-        Stack.stack_list[Stack.current_stack_size] = top_value;
-        Stack.program_counter++;
-        break;
-      }
+      duplicate();
+      break;
     
     case OP_IADD: //OPCODE 0X60
-      {
-        word_t top_value = pop();
-        word_t new_top_value = pop();
-        word_t summation_value = top_value + new_top_value;
-        push(summation_value);
-        Stack.program_counter++;
-        break;
-      }
+      i_add();
+      break;
 
     case OP_ISUB: //OPCODE 0X64
-      {
-        word_t top_value = pop();
-        word_t new_top_value = pop();
-        word_t subtraction_value = new_top_value - top_value;
-        push(subtraction_value);
-        Stack.program_counter++;
-        break;
-      }
+      i_sub();
+      break;
       
     case OP_IAND: //OPCODE 0XIE
-      {
-        word_t top_value = pop();
-        word_t new_top_value = pop();
-        word_t and_value = top_value & new_top_value;
-        push(and_value);
-        Stack.program_counter++;
-        break;
-      }
+      i_and();
+      break;
 
     case OP_IOR: //OPCODE 0XB0
-      {
-        word_t top_value = pop();
-        word_t new_top_value = pop();
-        word_t or_value = top_value | new_top_value;
-        push(or_value);
-        Stack.program_counter++;
-        break;
-      }
+      i_or();
+      break;
 
     case OP_POP: //OPCODE 0X57
-      {
-        pop();
-        Stack.program_counter++;
-        break;
-      }
+      instruction_pop();
+      break;
 
     case OP_SWAP: //OPCODE 0X5F
-      {
-        word_t top_value = pop();
-        word_t new_top_value = pop();
-        push(top_value);
-        push(new_top_value);
-        Stack.program_counter++;
-        break;
-      }
+      swap();
+      break;
 
     case OP_HALT: //OPCODE 0XFF
       {
@@ -257,17 +212,10 @@ void step(void) //Executes the current instruction
       Stack.program_counter++;
       break;
 
-    case OP_IN: //OPCODE 0XFC
+    case OP_IN: //OPCODE 0XFC 
       {
         byte_t input_value = fgetc(in);
-
-        if (!input_value) {
-            input_value = 0;
-        } 
-
-        push(input_value);
-
-        Stack.program_counter++;
+        instruction_input(input_value);
         break;
       }
 
@@ -280,7 +228,6 @@ void step(void) //Executes the current instruction
       }
 
     default:
-      //dprintf("Incorrect instruction architecture\n");
       break;
 
   }
