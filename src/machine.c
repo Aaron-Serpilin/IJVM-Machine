@@ -39,7 +39,7 @@ int init_ijvm(char *binary_path)
     return 1;
   }
 
-  word_t* initial_data_chunks = malloc(sizeof(int) * 12); //Stores the header, pool origin, and pool size
+  initial_data_chunks = malloc(sizeof(int) * 12); //Stores the header, pool origin, and pool size
 
   fread(initial_data_chunks, sizeof(word_t), 3, file_pointer); //I read first 3 chunks of 4 bytes
 
@@ -160,7 +160,7 @@ word_t get_local_variable(int i)
 
 void step(void) //Executes the current instruction
 {  
-  //int instruction_size = get_text_size();
+
   word_t instruction = (get_text())[Stack.program_counter]; //Fetches byte by byte of the instruction set
 
   switch(instruction) {
@@ -168,9 +168,6 @@ void step(void) //Executes the current instruction
     case OP_ERR: //OPCODE 0XFE
       dprintf("An error has occurred\n");
       Stack.finished_stack = true;
-      break;
-
-    case OP_NOP: //OPCODE 0X00
       break;
 
     case OP_BIPUSH: //OPCODE 0X10
@@ -181,16 +178,18 @@ void step(void) //Executes the current instruction
         word_t extended_instruction_value = (word_t)instruction_value;
         Stack.stack_list[Stack.current_stack_size] = extended_instruction_value;
         Stack.program_counter += 2;
-
         break;
       }
 
     case OP_DUP: //OPCODE 0X59
-      //Stack.stack_list[Stack.current_stack_size+1] = Stack.stack_list[Stack.current_stack_size];
-      //Stack.current_stack_size++;
-      //Stack.program_counter++;
-      break;
-
+      {
+        word_t top_value = Stack.stack_list[Stack.current_stack_size]; 
+        Stack.current_stack_size++;
+        Stack.stack_list[Stack.current_stack_size] = top_value;
+        Stack.program_counter++;
+        break;
+      }
+    
     case OP_IADD: //OPCODE 0X60
       {
         word_t top_value = pop();
@@ -202,41 +201,94 @@ void step(void) //Executes the current instruction
       }
 
     case OP_ISUB: //OPCODE 0X64
-      Stack.program_counter++;
-      break;
-
+      {
+        word_t top_value = pop();
+        word_t new_top_value = pop();
+        word_t subtraction_value = new_top_value - top_value;
+        push(subtraction_value);
+        Stack.program_counter++;
+        break;
+      }
+      
     case OP_IAND: //OPCODE 0XIE
-      Stack.program_counter++;
-      break;
+      {
+        word_t top_value = pop();
+        word_t new_top_value = pop();
+        word_t and_value = top_value & new_top_value;
+        push(and_value);
+        Stack.program_counter++;
+        break;
+      }
 
     case OP_IOR: //OPCODE 0XB0
-      Stack.program_counter++;
-      break;
+      {
+        word_t top_value = pop();
+        word_t new_top_value = pop();
+        word_t or_value = top_value | new_top_value;
+        push(or_value);
+        Stack.program_counter++;
+        break;
+      }
 
     case OP_POP: //OPCODE 0X57
-      Stack.program_counter++;
-      break;
+      {
+        pop();
+        Stack.program_counter++;
+        break;
+      }
 
     case OP_SWAP: //OPCODE 0X5F
-      Stack.program_counter++;
-      break;
+      {
+        word_t top_value = pop();
+        word_t new_top_value = pop();
+        push(top_value);
+        push(new_top_value);
+        Stack.program_counter++;
+        break;
+      }
 
     case OP_HALT: //OPCODE 0XFF
-      Stack.finished_stack = true;
+      {
+        Stack.finished_stack = true;
+        break;
+      }
+
+    case OP_NOP: //OPCODE 0X00
+      Stack.program_counter++;
       break;
 
     case OP_IN: //OPCODE 0XFC
-      Stack.program_counter++;
-      break;
+      {
+        byte_t input_value = fgetc(in);
 
-    case OP_OUT: //OPCODE 0XFD
-      Stack.program_counter++;
-      break;
+        if (!input_value) {
+            input_value = 0;
+        } 
+
+        push(input_value);
+
+        Stack.program_counter++;
+        break;
+      }
+
+    case OP_OUT: //OPCODE 0XFD 
+      {
+        char output_value = pop();
+        fprintf(out, "%c", output_value);
+        Stack.program_counter++;
+        break;
+      }
 
     default:
-      dprintf("Incorrect instruction architecture\n");
+      //dprintf("Incorrect instruction architecture\n");
       break;
 
+  }
+
+  int instruction_size = get_text_size();
+
+  if (Stack.program_counter >= instruction_size) { //Makes sure the counter does not surpass the size of the instruction set
+    Stack.finished_stack = true;
   }
 
   // dprintf("The value is %02X\n", Stack.stack_list[Stack.current_stack_size]);

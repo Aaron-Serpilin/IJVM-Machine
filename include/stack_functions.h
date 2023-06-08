@@ -5,7 +5,7 @@
 
 word_t pop (void) {
 
-    word_t top_value;
+    word_t top_value = 0;
     word_t garbage_value = 00;
 
     if (Stack.current_stack_size == -1) {
@@ -22,9 +22,9 @@ word_t pop (void) {
 
 void push (word_t value) {
 
-    if (Stack.current_stack_size == Stack.max_stack_size) {
-        realloc(Stack.stack_list, Stack.max_stack_size);
-    }
+    // if (Stack.current_stack_size == Stack.max_stack_size) {
+    //     realloc(Stack.stack_list, Stack.max_stack_size);
+    // }
 
     Stack.current_stack_size++;
     Stack.stack_list[Stack.current_stack_size] = value;
