@@ -83,33 +83,12 @@ void instruction_input (byte_t input_value) {
     Stack.program_counter++;
 }
 
-void go_to () {
+void go_to (void) {
 
-    int8_t instruction_value = get_text()[Stack.program_counter+1];
-    word_t extended_instruction_value = (word_t)instruction_value;
-
-    int number_offset_bytes = 2;
-    int instruction_size = get_text_size();
-    //short branch_offset = malloc(number_offset_bytes);
-    int8_t first_offset_byte = get_text()[Stack.program_counter+1];
-    int8_t second_offset_byte = get_text()[Stack.program_counter+2];
-    // char offset_string[] = first_offset_byte + second_offset_byte;
-    // dprintf("The string offset is %c\n", offset_string);
-    short branch_offset = (short) first_offset_byte << 32 | second_offset_byte;
-
-    dprintf("The instruction size is %d and the offset is %d\n", instruction_size, branch_offset);
-
-    if (branch_offset >= instruction_size) {
-        Stack.finished_stack = true;
-        Stack.program_counter++;
-    } else {
-        Stack.program_counter += branch_offset;
-    }
-
-    dprintf("The first offset is %02X\nThe second offset is %02X\nThe branch offset is %02X\n", first_offset_byte, second_offset_byte,branch_offset);
-    //dprintf("\n--- 02X PRINTING ---\nThe first offset is %02X\nThe second offset is %02X\nThe branch offset is %02X\n --- END ---\n", first_offset_byte, second_offset_byte,branch_offset);
-
-    return;
+    byte_t first_offset_byte = get_text()[Stack.program_counter+1];
+    byte_t second_offset_byte = get_text()[Stack.program_counter+2];
+    short branch_offset = (short) (first_offset_byte << 8) | (second_offset_byte & 0XFF);
+    Stack.program_counter += branch_offset;
 }
 
 void if_eq (void) {
