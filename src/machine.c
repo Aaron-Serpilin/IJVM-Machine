@@ -4,7 +4,7 @@
 #include "util.h" // read this file for debug prints, endianness helper functions
 #include "structs.h" //here is the ijvm and stack structs
 #include "stack_functions.h" //pop and push functions
-#include "instructions.h" //instruction set functions
+#include "instruction_execution.h" // carry out the corresponding instruction
 
 // see ijvm.h for descriptions of the below functions
 
@@ -87,19 +87,6 @@ int init_ijvm(char *binary_path)
 
   IJVM_machine.text_data = text_data; //It has size bytes and size elements
 
-  // dprintf("The header is %02X\n", IJVM_machine.header);
-  // dprintf("The pool size is %d\n", IJVM_machine.constant_pool_size);
-
-  // for (int i = 0; i < IJVM_machine.constant_pool_size/4; i++) {
-  //   dprintf("The %d pool data element is %02X\n", i, IJVM_machine.constant_pool_data[i]); 
-  // };
-  
-  // dprintf("The text size is %d\n", IJVM_machine.text_size);
-
-  // for (int i = 0; i < IJVM_machine.text_size; i++) {
-  //   dprintf("The %d text data element is %02X\n", i, IJVM_machine.text_data[i]);
-  // };
-
   fclose(file_pointer);
 
   Stack.max_stack_size = 1024;
@@ -118,6 +105,7 @@ void destroy_ijvm(void)
   free(pool_data);
   free(text_size);
   free(text_data);
+  free(Stack.stack_list);
 }
 
 byte_t *get_text(void) 
@@ -142,20 +130,16 @@ unsigned int get_program_counter(void)
 
 word_t tos(void) 
 {
-  // this operation should NOT pop (remove top element from Stack)
-  // TODO: implement me
   return Stack.stack_list[Stack.current_stack_size];
 }
 
 bool finished(void) 
 {
-  // TODO: implement me
   return Stack.finished_stack;
 }
 
 word_t get_local_variable(int i) 
 {
-  // TODO: implement me
   return 0;
 }
 
@@ -164,84 +148,13 @@ void step(void) //Executes the current instruction
 
   word_t instruction = (get_text())[Stack.program_counter]; //Fetches byte by byte of the instruction set
 
-  switch(instruction) {
-
-    case OP_ERR: //OPCODE 0XFE
-      error();
-      break;
-
-    case OP_BIPUSH: //OPCODE 0X10
-      bi_push();
-      break;
-
-    case OP_DUP: //OPCODE 0X59
-      duplicate();
-      break;
-    
-    case OP_IADD: //OPCODE 0X60
-      i_add();
-      break;
-
-    case OP_ISUB: //OPCODE 0X64
-      i_sub();
-      break;
-      
-    case OP_IAND: //OPCODE 0XIE
-      i_and();
-      break;
-
-    case OP_IOR: //OPCODE 0XB0
-      i_or();
-      break;
-
-    case OP_POP: //OPCODE 0X57
-      instruction_pop();
-      break;
-
-    case OP_SWAP: //OPCODE 0X5F
-      swap();
-      break;
-
-    case OP_HALT: //OPCODE 0XFF
-      {
-        Stack.finished_stack = true;
-        break;
-      }
-
-    case OP_NOP: //OPCODE 0X00
-      Stack.program_counter++;
-      break;
-
-    case OP_IN: //OPCODE 0XFC 
-      {
-        byte_t input_value = fgetc(in);
-        instruction_input(input_value);
-        break;
-      }
-
-    case OP_OUT: //OPCODE 0XFD 
-      {
-        char output_value = pop();
-        fprintf(out, "%c", output_value);
-        Stack.program_counter++;
-        break;
-      }
-
-    default:
-      break;
-
-  }
+  instruction_executioner(instruction);
 
   int instruction_size = get_text_size();
 
   if (Stack.program_counter >= instruction_size) { //Makes sure the counter does not surpass the size of the instruction set
     Stack.finished_stack = true;
   }
-
-  // dprintf("The value is %02X\n", Stack.stack_list[Stack.current_stack_size]);
-  // for (int i = 0; i < Stack.program_counter/2; i++) {
-  //   dprintf("The %d element of the stack is %02X\n", i, Stack.stack_list[i]);
-  // }
 
 }
 
