@@ -84,23 +84,46 @@ void instruction_input (byte_t input_value) {
 }
 
 void go_to (void) {
-
-    byte_t first_offset_byte = get_text()[Stack.program_counter+1];
-    byte_t second_offset_byte = get_text()[Stack.program_counter+2];
-    short branch_offset = (short) (first_offset_byte << 8) | (second_offset_byte & 0XFF);
+    byte_t* branch_pointer = get_text() + (Stack.program_counter+1);
+    short branch_offset = read_uint16_t(branch_pointer);
     Stack.program_counter += branch_offset;
 }
 
 void if_eq (void) {
-    return;
+    byte_t top_value = pop();
+    byte_t* branch_pointer = get_text() + (Stack.program_counter+1);
+    short branch_offset = read_uint16_t(branch_pointer);
+
+    if (top_value == 0) {
+        Stack.program_counter += branch_offset;
+    } else {
+        Stack.program_counter += 3;
+    }
 }
 
 void iflt (void) {
-    return;
+    int8_t top_value = pop(); //Need to use int8_t rather than byte_t to check for signed values
+    byte_t* branch_pointer = get_text() + (Stack.program_counter+1);
+    short branch_offset = read_uint16_t(branch_pointer);
+
+    if (top_value < 0) {
+        Stack.program_counter += branch_offset;
+    } else {
+        Stack.program_counter += 3;
+    }
 }
 
 void if_icmpeq (void) {
-    return;
+    byte_t top_value = pop();
+    byte_t new_top_value = pop();
+    byte_t* branch_pointer = get_text() + (Stack.program_counter+1);
+    short branch_offset = read_uint16_t(branch_pointer);
+
+    if (top_value == new_top_value) {
+        Stack.program_counter += branch_offset;
+    } else {
+        Stack.program_counter += 3;
+    }
 }
 
 #endif
