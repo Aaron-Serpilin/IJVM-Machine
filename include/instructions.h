@@ -6,13 +6,14 @@
 #include "util.h" 
 #include "stack_functions.h"
 
+extern word_t* variables_array; //To import the variables array
+
 void error (void) {
     dprintf("An error has occurred\n");
     Stack.finished_stack = true;
 }
 
 void bi_push (void) {
-    //dprintf("The index is %d and the counter is %d\n", Stack.current_stack_size, Stack.program_counter);
     Stack.current_stack_size++;
     int8_t instruction_value = get_text()[Stack.program_counter+1];
     word_t extended_instruction_value = (word_t)instruction_value;
@@ -124,6 +125,36 @@ void if_icmpeq (void) {
     } else {
         Stack.program_counter += 3;
     }
+}
+
+void ldc_w (void) {
+    byte_t* branch_pointer = get_text() + (Stack.program_counter+1);
+    short constant_index = read_uint16_t(branch_pointer);
+    word_t targeted_constant = get_constant(constant_index);
+    push(targeted_constant);
+    Stack.program_counter += 3;
+}
+
+void iload (void) {
+    byte_t variable_index = (get_text())[Stack.program_counter+1];
+    word_t value_at_index = variables_array[variable_index];
+    push(value_at_index);
+    Stack.program_counter += 2;
+}
+
+void istore (void) {
+    byte_t variable_index = (get_text())[Stack.program_counter+1];
+    word_t top_value = pop();
+    variables_array[variable_index] = top_value;
+    Stack.program_counter += 2;
+}
+
+void iinc (void) {
+    
+}
+
+void wide (void) {
+    return;
 }
 
 #endif

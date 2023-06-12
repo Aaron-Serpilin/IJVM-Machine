@@ -17,6 +17,7 @@ word_t* initial_data_chunks;
 word_t* pool_data;
 int* text_size;
 byte_t* text_data;
+word_t* variables_array; 
 
 void set_input(FILE *fp) 
 { 
@@ -90,10 +91,11 @@ int init_ijvm(char *binary_path)
   fclose(file_pointer);
 
   Stack.max_stack_size = 1024;
-  Stack.stack_list = (word_t*) malloc(get_text_size() * Stack.max_stack_size);
+  Stack.stack_list = (word_t*) malloc(sizeof(word_t) * Stack.max_stack_size); //Fixes memory leak for second and third test
   Stack.program_counter = 0;
   Stack.current_stack_size = -1;
   Stack.finished_stack = false;
+  variables_array = malloc(sizeof(word_t) * 256); //Allocating the number of variables stored in standard IJVM
   
   return 0;
 }
@@ -106,6 +108,7 @@ void destroy_ijvm(void)
   free(text_size);
   free(text_data);
   free(Stack.stack_list);
+  free(variables_array);
 }
 
 byte_t *get_text(void) 
@@ -140,7 +143,7 @@ bool finished(void)
 
 word_t get_local_variable(int i) 
 {
-  return 0;
+  return variables_array[i];
 }
 
 void step(void) //Executes the current instruction

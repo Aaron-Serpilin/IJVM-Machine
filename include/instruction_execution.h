@@ -90,6 +90,26 @@ void instruction_executioner (word_t current_instruction) {
             if_icmpeq();
             break;
 
+        case OP_LDC_W:
+            ldc_w();
+            break;
+
+        case OP_ILOAD:
+            iload();
+            break;
+
+        case OP_ISTORE:
+            istore();
+            break;
+
+        case OP_IINC:
+            iinc();
+            break;
+
+        case OP_WIDE:
+            wide();
+            break;
+        
         default:
         break;
 
