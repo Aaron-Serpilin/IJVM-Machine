@@ -15,7 +15,7 @@ void error (void) {
 
 void bi_push (void) {
     Stack.current_stack_size++;
-    int8_t instruction_value = get_text()[Stack.program_counter+1];
+    int8_t instruction_value = get_text()[Stack.program_counter+1]; //These two lines read 8-bit values that are negative in 32-bits and should be read as such
     word_t extended_instruction_value = (word_t)instruction_value;
     Stack.stack_list[Stack.current_stack_size] = extended_instruction_value;
     Stack.program_counter += 2;
@@ -150,10 +150,15 @@ void istore (void) {
 }
 
 void iinc (void) {
-    
+    int increment_index = (get_text())[Stack.program_counter+1];
+    int8_t increment_value = (get_text())[Stack.program_counter+2]; //In case the numbers are negative, we make it a 32-bit word to read the first bit in its complete length
+    word_t absolute_increment_value = (word_t) increment_value;
+    variables_array[increment_index] += absolute_increment_value;
+    Stack.program_counter += 3;
 }
 
 void wide (void) {
+    Stack.program_counter++;
     return;
 }
 
