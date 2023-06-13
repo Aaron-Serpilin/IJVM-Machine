@@ -22,32 +22,32 @@ void instruction_executioner (word_t current_instruction) {
             break;
 
         case OP_DUP: //OPCODE 0X59
-        duplicate();
-        break;
+            duplicate();
+            break;
     
         case OP_IADD: //OPCODE 0X60
-        i_add();
-        break;
+            i_add();
+            break;
 
         case OP_ISUB: //OPCODE 0X64
-        i_sub();
-        break;
+            i_sub();
+            break;
         
         case OP_IAND: //OPCODE 0XIE
-        i_and();
-        break;
+            i_and();
+            break;
 
         case OP_IOR: //OPCODE 0XB0
-        i_or();
-        break;
+            i_or();
+            break;
 
         case OP_POP: //OPCODE 0X57
-        instruction_pop();
-        break;
+            instruction_pop();
+            break;
 
         case OP_SWAP: //OPCODE 0X5F
-        swap();
-        break;
+            swap();
+            break;
 
         case OP_HALT: //OPCODE 0XFF
         {
