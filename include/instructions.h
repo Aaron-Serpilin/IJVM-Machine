@@ -160,32 +160,45 @@ void iinc (void) {
 void wide (void) {
     // We treat the wide instruction and the modified instruction as a single step
     word_t next_instruction = get_text()[Stack.program_counter+1];
-    
-    if (next_instruction == OP_ISTORE) {
 
-        byte_t* extended_index_pointer = get_text() + (Stack.program_counter+2); 
-        short extended_index = read_uint16_t(extended_index_pointer);
-        word_t top_value = pop();
-        variables_array[extended_index] = top_value;
-        Stack.program_counter += 4;
+    switch (next_instruction) {
 
-    } else if (next_instruction == OP_ILOAD) {
+        case OP_ISTORE: 
+        {
+            byte_t* extended_index_pointer = get_text() + (Stack.program_counter+2); 
+            short extended_index = read_uint16_t(extended_index_pointer);
+            word_t top_value = pop();
+            variables_array[extended_index] = top_value;
+            Stack.program_counter += 4;
+            break;
+        }
+            
+        
+        case OP_ILOAD: 
+        {
+            byte_t* extended_index_pointer = get_text() + (Stack.program_counter+2);
+            short extended_index = read_uint16_t(extended_index_pointer);
+            word_t value_at_index = variables_array[extended_index];
+            push(value_at_index);
+            Stack.program_counter += 4;
+            break;
+        }
+            
 
-        byte_t* extended_index_pointer = get_text() + (Stack.program_counter+2);
-        short extended_index = read_uint16_t(extended_index_pointer);
-        word_t value_at_index = variables_array[extended_index];
-        push(value_at_index);
-        Stack.program_counter += 4;
+        case OP_IINC:
+        {
+            byte_t* extended_index_pointer = get_text() + (Stack.program_counter+2);
+            short extended_index = read_uint16_t(extended_index_pointer);
+            int8_t increment_value = (get_text())[Stack.program_counter+4]; 
+            word_t absolute_increment_value = (word_t) increment_value;
+            variables_array[extended_index] += absolute_increment_value;
+            Stack.program_counter += 5;
+            break;
+        }
+           
 
-    } else if (next_instruction == OP_IINC) {
-
-        byte_t* extended_index_pointer = get_text() + (Stack.program_counter+2);
-        short extended_index = read_uint16_t(extended_index_pointer);
-        int8_t increment_value = (get_text())[Stack.program_counter+4]; //In case the numbers are negative, we make it a 32-bit word to read the first bit in its complete length
-        word_t absolute_increment_value = (word_t) increment_value;
-        variables_array[extended_index] += absolute_increment_value;
-        Stack.program_counter += 5;
-
+        default:
+            break;
     }
 }
 
