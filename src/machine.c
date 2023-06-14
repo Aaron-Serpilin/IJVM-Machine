@@ -90,11 +90,18 @@ int init_ijvm(char *binary_path)
 
   fclose(file_pointer);
 
+  //Initialization of all Stack variables
   Stack.max_stack_size = 1024;
   Stack.stack_list = (word_t*) malloc(sizeof(word_t) * Stack.max_stack_size); //Fixes memory leak for second and third test
   Stack.program_counter = 0;
   Stack.current_stack_size = -1;
   Stack.finished_stack = false;
+
+  //Initialization of all Frame variables
+  Stack.previous_program_counter = 0;
+  Stack.previous_link_pointer_value = 0;
+
+  //Initialization of Local Variables array
   variables_array = malloc(sizeof(word_t) * 256); //Allocating the number of variables stored in standard IJVM
   
   return 0;

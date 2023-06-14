@@ -21,6 +21,11 @@ struct {
   bool finished_stack;
   word_t* stack_list;
 
+  //Methods for Frames
+  word_t previous_program_counter;
+  word_t previous_link_pointer_value;
+  word_t previous_stack_size;
+
 } Stack;
 
 #endif

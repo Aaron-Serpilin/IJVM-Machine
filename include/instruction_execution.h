@@ -109,9 +109,17 @@ void instruction_executioner (word_t current_instruction) {
         case OP_WIDE:
             wide();
             break;
+
+        case OP_INVOKEVIRTUAL:
+            invoke_virtual();
+            break;
+        
+        case OP_IRETURN:
+            ireturn();
+            break;
         
         default:
-        break;
+            break;
 
         }
 

@@ -136,25 +136,25 @@ void ldc_w (void) {
 }
 
 void iload (void) {
-        byte_t variable_index = (get_text())[Stack.program_counter+1];
-        word_t value_at_index = variables_array[variable_index];
-        push(value_at_index);
-        Stack.program_counter += 2;
+    byte_t variable_index = (get_text())[Stack.program_counter+1];
+    word_t value_at_index = variables_array[variable_index];
+    push(value_at_index);
+    Stack.program_counter += 2;
 }
 
 void istore (void) {
-        byte_t variable_index = (get_text())[Stack.program_counter+1];
-        word_t top_value = pop();
-        variables_array[variable_index] = top_value;
-        Stack.program_counter += 2;
+    byte_t variable_index = (get_text())[Stack.program_counter+1];
+    word_t top_value = pop();
+    variables_array[variable_index] = top_value;
+    Stack.program_counter += 2;
 }
 
 void iinc (void) {
-        byte_t increment_index = (get_text())[Stack.program_counter+1];
-        int8_t increment_value = (get_text())[Stack.program_counter+2]; //In case the numbers are negative, we make it a 32-bit word to read the first bit in its complete length
-        word_t absolute_increment_value = (word_t) increment_value;
-        variables_array[increment_index] += absolute_increment_value;
-        Stack.program_counter += 3;
+    byte_t increment_index = (get_text())[Stack.program_counter+1];
+    int8_t increment_value = (get_text())[Stack.program_counter+2]; //In case the numbers are negative, we make it a 32-bit word to read the first bit in its complete length
+    word_t absolute_increment_value = (word_t) increment_value;
+    variables_array[increment_index] += absolute_increment_value;
+    Stack.program_counter += 3;
 }
 
 void wide (void) {
@@ -173,7 +173,6 @@ void wide (void) {
             break;
         }
             
-        
         case OP_ILOAD: 
         {
             byte_t* extended_index_pointer = get_text() + (Stack.program_counter+2);
@@ -184,7 +183,6 @@ void wide (void) {
             break;
         }
             
-
         case OP_IINC:
         {
             byte_t* extended_index_pointer = get_text() + (Stack.program_counter+2);
@@ -196,10 +194,67 @@ void wide (void) {
             break;
         }
            
-
         default:
             break;
     }
+}
+
+void invoke_virtual (void) {
+
+    byte_t* starting_address_pointer = get_text() + (Stack.program_counter+1);
+    short starting_address_index = read_uint16_t(starting_address_pointer);
+    word_t constant_value = get_constant(starting_address_index);
+
+    byte_t* number_arguments_pointer = get_text() + (constant_value);
+    short number_arguments = read_uint16_t(number_arguments_pointer);
+    byte_t* number_variables_pointer = get_text() + (constant_value+2);
+    short number_variables = read_uint16_t(number_variables_pointer);
+
+    Stack.previous_program_counter = Stack.program_counter;
+    Stack.previous_stack_size = Stack.current_stack_size;
+    Stack.previous_link_pointer_value;
+
+    int frame_location_previous_counter = Stack.previous_stack_size + number_variables + 1;
+    word_t link_pointer_value = number_arguments + number_variables + 1;
+    word_t frame_pointer = Stack.previous_stack_size - number_arguments + 1; //Index of link_pointer_value
+
+    word_t frame_argument_array[number_arguments];
+    word_t frame_variable_array[256];
+    word_t frame_arguments;
+    word_t frame_variables;
+
+    for (int i = 0; i < number_arguments; i++) {
+        frame_arguments = pop();
+        frame_argument_array[i] = frame_arguments;
+        //dprintf("The argument to pop is %d\n", frame_arguments);
+    }
+
+    push(link_pointer_value);
+
+    for (int i = number_arguments; i > 0; i--) {
+        frame_arguments = frame_argument_array[i];
+        push(frame_arguments);
+        //dprintf("The argument to push is %d\n", frame_arguments);
+        //frame_argument_array[i] = 00; //Assign the used arguments a garbage value
+    }
+
+   for (int i = 0; i < number_variables; i++) {
+        frame_variables = variables_array[i];
+
+        if (number_variables != 0) {
+            push(frame_variables);
+            //dprintf("The variable to push is %d\n", frame_variables);
+        }
+   }
+
+    push(Stack.previous_program_counter); //Pushing Caller PC
+    push(Stack.previous_link_pointer_value); //Pushing Caller LV
+
+    Stack.program_counter += constant_value; 
+}
+
+void ireturn (void) {
+    return;
 }
 
 #endif
