@@ -212,11 +212,12 @@ void invoke_virtual (void) {
 
     Stack.previous_program_counter = Stack.program_counter;
     Stack.previous_stack_size = Stack.current_stack_size;
-    Stack.previous_link_pointer_value;
+    //Stack.previous_link_pointer_value;
 
-    int frame_location_previous_counter = Stack.previous_stack_size + number_variables + 1;
+    Stack.program_counter = constant_value; //We move the counter to the index stated by the constant
+
     word_t link_pointer_value = number_arguments + number_variables + 1;
-    word_t frame_pointer = Stack.previous_stack_size - number_arguments + 1; //Index of link_pointer_value
+    //word_t frame_pointer = Stack.previous_stack_size - number_arguments + 1; //Index of link_pointer_value
 
     word_t frame_argument_array[number_arguments];
     word_t frame_variable_array[256];
@@ -231,7 +232,7 @@ void invoke_virtual (void) {
 
     push(link_pointer_value);
 
-    for (int i = number_arguments; i > 0; i--) {
+    for (int i = 0; i < number_arguments; i++) {
         frame_arguments = frame_argument_array[i];
         push(frame_arguments);
         //dprintf("The argument to push is %d\n", frame_arguments);
@@ -239,18 +240,19 @@ void invoke_virtual (void) {
     }
 
    for (int i = 0; i < number_variables; i++) {
-        frame_variables = variables_array[i];
-
-        if (number_variables != 0) {
-            push(frame_variables);
-            //dprintf("The variable to push is %d\n", frame_variables);
-        }
+        frame_variables = frame_variable_array[i];
+        push(frame_variables);
    }
-
+    
     push(Stack.previous_program_counter); //Pushing Caller PC
     push(Stack.previous_link_pointer_value); //Pushing Caller LV
 
-    Stack.program_counter += constant_value; 
+    Stack.program_counter += 4; 
+
+    for (int i = 0; i < Stack.current_stack_size; i++) {
+        dprintf("Stack element %d is %d\n", i, Stack.stack_list[i]);
+    }
+    
 }
 
 void ireturn (void) {
