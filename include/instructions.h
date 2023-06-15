@@ -1,13 +1,13 @@
 #ifndef INSTRUCTIONS_H
 #define INSTRUCTIONS_H
 
-#include <stdio.h>  // for getc, printf
+#include <stdio.h> 
 #include "ijvm.h"
 #include "structs.h"
 #include "util.h" 
 #include "stack_functions.h"
+#include "frame_creator.h"
 
-//extern word_t* head->local_variables; //To import the variables array
 extern current_frame * head;
 
 void error (void) {
@@ -201,9 +201,20 @@ void wide (void) {
     }
 }
 
-// void invoke_virtual (void) {
+void invoke_virtual (void) {
+    
+    byte_t* starting_address_pointer = get_text() + (head->main_stack.program_counter+1);
+    short starting_address_index = read_uint16_t(starting_address_pointer);
+    word_t constant_value = get_constant(starting_address_index);
 
-// }
+    byte_t* number_arguments_pointer = get_text() + (constant_value);
+    short number_arguments = read_uint16_t(number_arguments_pointer);
+    byte_t* number_variables_pointer = get_text() + (constant_value+2);
+    short number_variables = read_uint16_t(number_variables_pointer);
+
+     //frame_creator();
+
+}
 
 // void ireturn (void) {
 

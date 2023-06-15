@@ -7,30 +7,31 @@
 #include "instruction_execution.h" // carry out the corresponding instruction
 #include "data_sorter.h" // to read all the binary data and store it accodingly
 
-// see ijvm.h for descriptions of the below functions
-
-FILE *in;   // use fgetc(in) to get a character from in.
-            // This will return EOF if no char is available.
-FILE *out;  // use for example fprintf(out, "%c", value); to print value to out
+FILE *in;   
+            
+FILE *out;  
 
 void set_input(FILE *fp) { in = fp; }
 
 void set_output(FILE *fp) { out = fp; }
 
 // Initialization of Head Frame
-current_frame * head = NULL;
+struct frame *head = NULL;
 
-int init_ijvm(char *binary_path) 
-{
+int init_ijvm(char *binary_path) {
   in = stdin;
   out = stdout;
 
   binary_path_data_sorter(binary_path, global_variables.initial_data_chunks, global_variables.pool_data, global_variables.text_size, global_variables.text_data);
 
   //Initialization of all Frame variables
-  head = (current_frame *) malloc(sizeof(current_frame));
+  // head = (struct frame *) malloc(sizeof(struct frame));
+  head = malloc(sizeof(struct frame));
 
   if (head == NULL) {return 1;}
+
+  //Initialization of Local Variables array
+  head->local_variables = malloc(sizeof(word_t) * 256); //Allocating the number of variables stored in standard ijvm
 
   //Initialization of all Stack variables
   head->main_stack.max_stack_size = 1024;
@@ -39,15 +40,10 @@ int init_ijvm(char *binary_path)
   head->main_stack.current_stack_size = -1;
   head->main_stack.finished_stack = false;
 
-  //Initialization of Local Variables array
-  head->local_variables = malloc(sizeof(word_t) * 256); //Allocating the number of variables stored in standard IJVM
-  
   return 0;
 }
 
-void destroy_ijvm(void) 
-{
-  // TODO: implement me
+void destroy_ijvm(void) {
   free(global_variables.initial_data_chunks);
   free(global_variables.pool_data);
   free(global_variables.text_size);
