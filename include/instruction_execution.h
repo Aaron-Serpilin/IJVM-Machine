@@ -1,5 +1,6 @@
 #ifndef INSTRUCTION_EXECUTION_H
 #define INSTRUCTION_EXECUTION_H
+
 #include "ijvm.h"
 #include "structs.h"
 #include "util.h" 
@@ -8,6 +9,8 @@
 
 FILE *in;             
 FILE *out;
+
+extern current_frame * head;
 
 void instruction_executioner (word_t current_instruction) {
     
@@ -51,12 +54,12 @@ void instruction_executioner (word_t current_instruction) {
 
         case OP_HALT: //OPCODE 0XFF
         {
-            main_frame.main_stack.finished_stack = true;
+            head->main_stack.finished_stack = true;
             break;
         }
 
         case OP_NOP: //OPCODE 0X00
-            main_frame.main_stack.program_counter++;
+            head->main_stack.program_counter++;
             break;
 
         case OP_IN: //OPCODE 0XFC 
@@ -70,7 +73,7 @@ void instruction_executioner (word_t current_instruction) {
         {
             char output_value = pop();
             fprintf(out, "%c", output_value);
-            main_frame.main_stack.program_counter++;
+            head->main_stack.program_counter++;
             break;
         }
         

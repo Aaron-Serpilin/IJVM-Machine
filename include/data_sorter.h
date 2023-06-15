@@ -1,5 +1,6 @@
 #ifndef DATA_SORTER_H
 #define DATA_SORTER_H
+
 #include <stdio.h>  // for getc, printf
 #include <stdlib.h> // malloc, free
 #include "ijvm.h"

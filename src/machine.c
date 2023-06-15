@@ -23,24 +23,31 @@ void set_input(FILE *fp) { in = fp; }
 
 void set_output(FILE *fp) { out = fp; }
 
+// Initialization of Head Frame
+current_frame * head = NULL;
+
 int init_ijvm(char *binary_path) 
 {
   in = stdin;
   out = stdout;
-  
+
   binary_path_data_sorter(binary_path, initial_data_chunks, pool_data, text_size, text_data);
 
-  //Initialization of all Stack variables
-  main_frame.main_stack.max_stack_size = 1024;
-  main_frame.main_stack.stack_pointer = (word_t*) malloc(sizeof(word_t) * main_frame.main_stack.max_stack_size); //Fixes memory leak for second and third test
-  main_frame.main_stack.program_counter = 0;
-  main_frame.main_stack.current_stack_size = -1;
-  main_frame.main_stack.finished_stack = false;
-
   //Initialization of all Frame variables
+  //current_frame * head = NULL;
+  head = (current_frame *) malloc(sizeof(current_frame));
+
+  if (head == NULL) {return 1;}
+
+  //Initialization of all Stack variables
+  head->main_stack.max_stack_size = 1024;
+  head->main_stack.stack_pointer = (word_t*) malloc(sizeof(word_t) * head->main_stack.max_stack_size); //Fixes memory leak for second and third test
+  head->main_stack.program_counter = 0;
+  head->main_stack.current_stack_size = -1;
+  head->main_stack.finished_stack = false;
 
   //Initialization of Local Variables array
-  main_frame.local_variables = malloc(sizeof(word_t) * 256); //Allocating the number of variables stored in standard IJVM
+  head->local_variables = malloc(sizeof(word_t) * 256); //Allocating the number of variables stored in standard IJVM
   
   return 0;
 }
@@ -52,7 +59,7 @@ void destroy_ijvm(void)
   free(pool_data);
   free(text_size);
   free(text_data);
-  free(main_frame.main_stack.stack_pointer);
+  free(head->main_stack.stack_pointer);
 }
 
 byte_t *get_text(void) { return IJVM_machine.text_data;}
@@ -61,26 +68,25 @@ unsigned int get_text_size(void) { return IJVM_machine.text_size;}
 
 word_t get_constant(int i) { return IJVM_machine.constant_pool_data[i];}
 
-unsigned int get_program_counter(void) { return main_frame.main_stack.program_counter;}
+unsigned int get_program_counter(void) { return head->main_stack.program_counter;}
 
-word_t tos(void) { return main_frame.main_stack.stack_pointer[main_frame.main_stack.current_stack_size];}
+word_t tos(void) { return head->main_stack.stack_pointer[head->main_stack.current_stack_size];}
 
-bool finished(void) { return main_frame.main_stack.finished_stack;}
+bool finished(void) { return head->main_stack.finished_stack;}
 
-word_t get_local_variable(int i) { return main_frame.local_variables[i];
-}
+word_t get_local_variable(int i) { return head->local_variables[i];}
 
 void step(void) //Executes the current instruction
 {  
 
-  word_t instruction = (get_text())[main_frame.main_stack.program_counter]; //Fetches byte by byte of the instruction set
+  word_t instruction = (get_text())[head->main_stack.program_counter]; //Fetches byte by byte of the instruction set
 
   instruction_executioner(instruction);
 
   int instruction_size = get_text_size();
 
-  if (main_frame.main_stack.program_counter >= instruction_size) { //Makes sure the counter does not surpass the size of the instruction set
-    main_frame.main_stack.finished_stack = true;
+  if (head->main_stack.program_counter >= instruction_size) { //Makes sure the counter does not surpass the size of the instruction set
+    head->main_stack.finished_stack = true;
   }
 
 }

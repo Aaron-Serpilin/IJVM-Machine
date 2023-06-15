@@ -1,5 +1,6 @@
 #ifndef STRUCTS_H
 #define STRUCTS_H
+
 #include "ijvm.h"
 
 struct {
@@ -22,16 +23,14 @@ typedef struct {
 
 } frame_stack;
 
-typedef struct {
+typedef struct frame {
 
-  word_t* local_variables; //Array for the arguments and variables of each Frame
+  struct frame* next_frame;
   frame_stack main_stack;
-  word_t* next_frame;
-  int previous_program_counter;
+  word_t* local_variables; //Array for the arguments and variables of each frame
   word_t* previous_stack_pointer;
+  int previous_program_counter;
 
 } current_frame;
-
-current_frame main_frame;
 
 #endif
