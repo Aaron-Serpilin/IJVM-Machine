@@ -8,12 +8,12 @@ word_t pop (void) {
     word_t top_value = 0;
     word_t garbage_value = 00;
 
-    if (Stack.current_stack_size == -1) {
-        dprintf("Cannot pop value. Stack is empty\n");
+    if (main_frame.main_stack.current_stack_size == -1) {
+        dprintf("Cannot pop value. main_frame.main_stack is empty\n");
     } else {
-        Stack.stack_list[Stack.current_stack_size+1] = garbage_value;
-        top_value = Stack.stack_list[Stack.current_stack_size];
-        Stack.current_stack_size--;
+        main_frame.main_stack.stack_pointer[main_frame.main_stack.current_stack_size+1] = garbage_value;
+        top_value = main_frame.main_stack.stack_pointer[main_frame.main_stack.current_stack_size];
+        main_frame.main_stack.current_stack_size--;
     }
 
     return top_value;
@@ -22,12 +22,12 @@ word_t pop (void) {
 
 void push (word_t value) {
 
-    // if (Stack.current_stack_size == Stack.max_stack_size) {
-    //     realloc(Stack.stack_list, Stack.max_stack_size);
+    // if (main_frame.main_stack.current_stack_size == main_frame.main_stack.max_stack_size) {
+    //     realloc(main_frame.main_stack.stack_pointer, main_frame.main_stack.max_stack_size);
     // }
 
-    Stack.current_stack_size++;
-    Stack.stack_list[Stack.current_stack_size] = value;
+    main_frame.main_stack.current_stack_size++;
+    main_frame.main_stack.stack_pointer[main_frame.main_stack.current_stack_size] = value;
 
 }
 

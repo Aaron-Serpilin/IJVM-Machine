@@ -51,13 +51,13 @@ void instruction_executioner (word_t current_instruction) {
 
         case OP_HALT: //OPCODE 0XFF
         {
-            Stack.finished_stack = true;
+            main_frame.main_stack.finished_stack = true;
             break;
         }
 
         case OP_NOP: //OPCODE 0X00
-        Stack.program_counter++;
-        break;
+            main_frame.main_stack.program_counter++;
+            break;
 
         case OP_IN: //OPCODE 0XFC 
         {
@@ -70,7 +70,7 @@ void instruction_executioner (word_t current_instruction) {
         {
             char output_value = pop();
             fprintf(out, "%c", output_value);
-            Stack.program_counter++;
+            main_frame.main_stack.program_counter++;
             break;
         }
         
@@ -111,11 +111,11 @@ void instruction_executioner (word_t current_instruction) {
             break;
 
         case OP_INVOKEVIRTUAL:
-            invoke_virtual();
+            //invoke_virtual();
             break;
         
         case OP_IRETURN:
-            ireturn();
+            //ireturn();
             break;
         
         default:

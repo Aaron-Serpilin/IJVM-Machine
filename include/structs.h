@@ -9,23 +9,29 @@ struct {
   word_t* constant_pool_data;
   int text_size;
   byte_t* text_data;
-  //Stack* current_stack;
 
 } IJVM_machine;
 
-struct {
+typedef struct {
 
   int program_counter;
   int current_stack_size;
   int max_stack_size;
   bool finished_stack;
-  word_t* stack_list;
+  word_t* stack_pointer;
 
-  //Methods for Frames
-  word_t previous_program_counter;
-  word_t previous_link_pointer_value;
-  word_t previous_stack_size;
+} frame_stack;
 
-} Stack;
+typedef struct {
+
+  word_t* local_variables; //Array for the arguments and variables of each Frame
+  frame_stack main_stack;
+  word_t* next_frame;
+  int previous_program_counter;
+  word_t* previous_stack_pointer;
+
+} current_frame;
+
+current_frame main_frame;
 
 #endif
