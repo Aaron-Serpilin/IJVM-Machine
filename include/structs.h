@@ -3,6 +3,16 @@
 
 #include "ijvm.h"
 
+// Global variables to free space after allocating each time in destroy_ijvm
+struct {
+
+  word_t* initial_data_chunks;
+  word_t* pool_data;
+  int* text_size;
+  byte_t* text_data;
+
+} global_variables;
+
 struct {
 
   word_t header;
@@ -11,7 +21,7 @@ struct {
   int text_size;
   byte_t* text_data;
 
-} IJVM_machine;
+} ijvm_machine;
 
 typedef struct {
 

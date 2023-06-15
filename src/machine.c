@@ -13,12 +13,6 @@ FILE *in;   // use fgetc(in) to get a character from in.
             // This will return EOF if no char is available.
 FILE *out;  // use for example fprintf(out, "%c", value); to print value to out
 
-// Global variables to free space after allocating each time in destroy_ijvm
-word_t* initial_data_chunks;
-word_t* pool_data;
-int* text_size;
-byte_t* text_data;
-
 void set_input(FILE *fp) { in = fp; }
 
 void set_output(FILE *fp) { out = fp; }
@@ -31,10 +25,9 @@ int init_ijvm(char *binary_path)
   in = stdin;
   out = stdout;
 
-  binary_path_data_sorter(binary_path, initial_data_chunks, pool_data, text_size, text_data);
+  binary_path_data_sorter(binary_path, global_variables.initial_data_chunks, global_variables.pool_data, global_variables.text_size, global_variables.text_data);
 
   //Initialization of all Frame variables
-  //current_frame * head = NULL;
   head = (current_frame *) malloc(sizeof(current_frame));
 
   if (head == NULL) {return 1;}
@@ -55,18 +48,18 @@ int init_ijvm(char *binary_path)
 void destroy_ijvm(void) 
 {
   // TODO: implement me
-  free(initial_data_chunks);
-  free(pool_data);
-  free(text_size);
-  free(text_data);
+  free(global_variables.initial_data_chunks);
+  free(global_variables.pool_data);
+  free(global_variables.text_size);
+  free(global_variables.text_data);
   free(head->main_stack.stack_pointer);
 }
 
-byte_t *get_text(void) { return IJVM_machine.text_data;}
+byte_t *get_text(void) { return ijvm_machine.text_data;}
 
-unsigned int get_text_size(void) { return IJVM_machine.text_size;}
+unsigned int get_text_size(void) { return ijvm_machine.text_size;}
 
-word_t get_constant(int i) { return IJVM_machine.constant_pool_data[i];}
+word_t get_constant(int i) { return ijvm_machine.constant_pool_data[i];}
 
 unsigned int get_program_counter(void) { return head->main_stack.program_counter;}
 
@@ -76,8 +69,8 @@ bool finished(void) { return head->main_stack.finished_stack;}
 
 word_t get_local_variable(int i) { return head->local_variables[i];}
 
-void step(void) //Executes the current instruction
-{  
+//Executes the current instruction 
+void step(void) { 
 
   word_t instruction = (get_text())[head->main_stack.program_counter]; //Fetches byte by byte of the instruction set
 
@@ -91,16 +84,13 @@ void step(void) //Executes the current instruction
 
 }
 
-void run(void) 
-{
-  while (!finished()) 
-  {
+void run(void) {
+  while (!finished()) {
     step();
   }
 }
 
-byte_t get_instruction(void) 
-{ 
+byte_t get_instruction(void) { 
   return get_text()[get_program_counter()]; 
 }
 
