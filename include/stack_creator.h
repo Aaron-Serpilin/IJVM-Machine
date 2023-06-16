@@ -9,12 +9,19 @@
 
 extern current_frame * head;
 
-struct stack stack_creator (struct frame* new_frame) {
+void stack_creator (struct frame* new_frame) {
 
-     //Create a function that creates a new frame and then call invoke, and resetting the current frame to the newly created frame
-    struct stack new_stack;
-   
-    return new_stack;
+    struct stack *new_stack = NULL;
+    new_stack = malloc(sizeof(struct stack));
+
+    new_stack->max_stack_size = 1024;
+    new_stack->stack_pointer = (word_t *) malloc(sizeof(word_t) * new_stack->max_stack_size); 
+    new_stack->program_counter = 0;
+    new_stack->current_stack_size = -1;
+    new_stack->finished_stack = false;
+
+    new_frame->main_stack = *new_stack;
+
 }
 
 #endif

@@ -9,19 +9,19 @@
 #include "stack_creator.h"
 
 extern current_frame * head;
-//Create a function that creates a new frame and then call invoke, and resetting the current frame to the newly created frame
 
 void frame_creator (void) {
 
     struct frame *new_frame = NULL;
     new_frame = malloc(sizeof(struct frame));
 
-    new_frame->previous_frame_pointer = head;
-    new_frame->previous_stack_pointer = head->main_stack.stack_pointer;
+    new_frame->previous_frame_pointer = head; //Set the previous frame pointer to the previous frame
+    new_frame->previous_stack_pointer = head->main_stack.stack_pointer; 
     new_frame->local_variables = malloc(sizeof(word_t) * 256); //Each frame has its own variables array
-    new_frame->main_stack = stack_creator(new_frame);
+    stack_creator(new_frame);
+    new_frame->previous_program_counter = head->main_stack.program_counter;
 
-    head = new_frame;
+    head = new_frame; //Recursively reassign the current frame (head) to the newly created frame
 
 }
 

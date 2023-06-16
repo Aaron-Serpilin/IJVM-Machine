@@ -31,7 +31,7 @@ typedef struct stack {
   bool finished_stack;
   word_t* stack_pointer;
 
-} frame_stack;
+} current_stack;
 
 typedef struct frame {
 
@@ -39,7 +39,7 @@ typedef struct frame {
 
   word_t* local_variables; //Array for the arguments and variables of each frame
 
-  frame_stack main_stack;
+  current_stack main_stack;
   word_t* previous_stack_pointer;
   int previous_program_counter;
   int current_program_counter;

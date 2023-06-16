@@ -202,7 +202,7 @@ void wide (void) {
 }
 
 void invoke_virtual (void) {
-    
+
     byte_t* starting_address_pointer = get_text() + (head->main_stack.program_counter+1);
     short starting_address_index = read_uint16_t(starting_address_pointer);
     word_t constant_value = get_constant(starting_address_index);
@@ -212,7 +212,20 @@ void invoke_virtual (void) {
     byte_t* number_variables_pointer = get_text() + (constant_value+2);
     short number_variables = read_uint16_t(number_variables_pointer);
 
-     //frame_creator();
+    word_t frame_argument;
+    word_t frame_arguments_array[number_arguments];
+
+    for (int i = 0; i < number_arguments; i++) {
+        frame_argument = pop();
+        frame_arguments_array[i] = frame_argument;
+    }
+
+    //frame_creator();
+
+    for (int i = 0; i < number_arguments; i++) {
+        frame_argument = frame_arguments_array[i];
+        push(frame_argument);
+    }
 
 }
 
