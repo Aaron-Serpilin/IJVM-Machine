@@ -28,10 +28,8 @@ int init_ijvm(char *binary_path) {
 
   //Initialization of the Frame
   head = malloc(sizeof(struct frame));
-
   if (head == NULL) {return 1;}
-
-  head->main_stack = stack_creator(head);
+  head->main_stack = stack_creator();
   head = frame_creator(head, 256);
 
   return 0;
@@ -53,7 +51,10 @@ word_t get_constant(int i) { return ijvm_machine.constant_pool_data[i];}
 
 unsigned int get_program_counter(void) { return head->main_stack->program_counter;}
 
-word_t tos(void) { return head->main_stack->stack_pointer[head->main_stack->current_stack_size];}
+word_t tos(void) {
+  word_t stack_top = head->main_stack->stack_pointer[head->main_stack->current_stack_size];
+  return stack_top;
+}
 
 bool finished(void) { return head->main_stack->finished_stack;}
 

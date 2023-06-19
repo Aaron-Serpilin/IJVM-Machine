@@ -12,8 +12,8 @@ int binary_path_data_sorter (char* binary_path, word_t* initial_data_chunks, wor
     FILE* file_pointer = fopen(binary_path, "rb");
 
     if (file_pointer == NULL) {
-        dprintf("Input file cannot be opened\n");
-        return 1;
+      dprintf("Input file cannot be opened\n");
+      return 1;
     }
 
   //To avoid memory leaks, it is important to allocate and read the same number of bytes

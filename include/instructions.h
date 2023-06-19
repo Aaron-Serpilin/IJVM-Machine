@@ -215,16 +215,12 @@ void invoke_virtual (void) {
     // byte_t* number_variables_pointer = get_text() + (constant_value+2);
     // short number_variables = read_uint16_t(number_variables_pointer);
 
+    // short total_number_values = number_arguments + number_variables;
+
     word_t frame_argument;
     word_t frame_arguments_array[number_arguments];
     
-    dprintf("\n---BEGINNING---\n");
-    dprintf("\nThe stack BEFORE the creation of the new frame is as follows:\n");
-    for (int i = 0; i <= head->main_stack->current_stack_size; i++) {
-        dprintf("Stack element %d is %d\n", i, head->main_stack->stack_pointer[i]);
-    }
-
-    for (int i = 0; i < number_arguments; i++) {
+    for (int i = number_arguments - 1; i >= 0; i--) {
         frame_argument = pop();
         frame_arguments_array[i] = frame_argument;
     }
@@ -236,21 +232,15 @@ void invoke_virtual (void) {
         head->local_variables[i] = frame_arguments_array[i];
     }
 
-    dprintf("\nThe stack AFTER the creation of the new frame is as follows:\n");
-    for (int i = 0; i <= head->previous_frame_pointer->main_stack->current_stack_size; i++) {
-        dprintf("Stack element %d is %d\n", i, head->main_stack->stack_pointer[i]);
-    }
-    dprintf("\n---END---\n");
-
     head->main_stack->program_counter += offset;
 
 }
 
 void ireturn (void) {
 
-    int new_counter = head->previous_program_counter + 3;
-    word_t frame_return_value = pop();
+    int new_counter = head->previous_program_counter;
     struct frame* frame_to_be_destroyed = head;
+    word_t frame_return_value = pop();
     head = head->previous_frame_pointer;
     head->main_stack->program_counter = new_counter;
     frame_destroyer(frame_to_be_destroyed);

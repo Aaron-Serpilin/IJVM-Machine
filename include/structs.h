@@ -38,7 +38,6 @@ typedef struct frame {
   struct frame* previous_frame_pointer;
   struct stack* main_stack;
   word_t* local_variables; //Array for the arguments and variables of each frame
-  word_t* previous_stack_pointer;
   int previous_program_counter;
 
 } current_frame;
