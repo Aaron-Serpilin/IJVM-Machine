@@ -64,7 +64,7 @@ void instruction_executioner (word_t current_instruction) {
 
         case OP_IN: //OPCODE 0XFC 
         {
-            byte_t input_value = fgetc(in);
+            word_t input_value = fgetc(in);
             instruction_input(input_value);
             break;
         }

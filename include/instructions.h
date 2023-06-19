@@ -77,13 +77,13 @@ void swap (void) {
     head->main_stack->program_counter++;
 }
 
-void instruction_input (byte_t input_value) {
+void instruction_input (word_t input_value) {
 
-    if (!input_value) {
+    if (input_value == EOF) {
         input_value = 0;
     } 
 
-    push(head,(word_t) input_value);
+    push(head, input_value);
 
     head->main_stack->program_counter++;
 }
@@ -170,7 +170,7 @@ void wide (void) {
         case OP_ISTORE: 
         {
             byte_t* extended_index_pointer = get_text() + (head->main_stack->program_counter+2); 
-            short extended_index = read_uint16_t(extended_index_pointer);
+            long extended_index = read_uint16_t(extended_index_pointer);
             word_t top_value = pop(head);
             head->local_variables[extended_index] = top_value;
             head->main_stack->program_counter += 4;
@@ -180,7 +180,7 @@ void wide (void) {
         case OP_ILOAD: 
         {
             byte_t* extended_index_pointer = get_text() + (head->main_stack->program_counter+2);
-            short extended_index = read_uint16_t(extended_index_pointer);
+            long extended_index = read_uint16_t(extended_index_pointer);
             word_t value_at_index = head->local_variables[extended_index];
             push(head,value_at_index);
             head->main_stack->program_counter += 4;
@@ -190,7 +190,7 @@ void wide (void) {
         case OP_IINC:
         {
             byte_t* extended_index_pointer = get_text() + (head->main_stack->program_counter+2);
-            short extended_index = read_uint16_t(extended_index_pointer);
+            long extended_index = read_uint16_t(extended_index_pointer);
             int8_t increment_value = (get_text())[head->main_stack->program_counter+4]; 
             word_t absolute_increment_value = (word_t) increment_value;
             head->local_variables[extended_index] += absolute_increment_value;
@@ -219,13 +219,13 @@ void invoke_virtual (void) {
 
     word_t frame_argument;
     word_t frame_arguments_array[number_arguments];
-    
-    for (int i = number_arguments - 1; i >= 0; i--) {
-        frame_argument = pop(head);
-        frame_arguments_array[i] = frame_argument;
-    }
 
     head = frame_creator(head, 256);
+    
+    for (int i = number_arguments - 1; i >= 0; i--) {
+        frame_argument = pop(head->previous_frame_pointer);
+        frame_arguments_array[i] = frame_argument;
+    }
 
     //Adding the arguments to the local variables array
     for (int i = 0; i < number_arguments; i++) {

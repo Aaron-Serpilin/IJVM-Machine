@@ -51,10 +51,7 @@ word_t get_constant(int i) { return ijvm_machine.constant_pool_data[i];}
 
 unsigned int get_program_counter(void) { return head->main_stack->program_counter;}
 
-word_t tos(void) {
-  word_t stack_top = head->main_stack->stack_pointer[head->main_stack->current_stack_size];
-  return stack_top;
-}
+word_t tos(void) { return head->main_stack->stack_pointer[head->main_stack->current_stack_size];}
 
 bool finished(void) { return head->main_stack->finished_stack;}
 
@@ -72,6 +69,12 @@ void step(void) {
   if (head->main_stack->program_counter >= instruction_size) { //Makes sure the counter does not surpass the size of the instruction set
     head->main_stack->finished_stack = true;
   }
+
+
+  // dprintf("\nThe counter is %d\n", head->main_stack->program_counter);
+  // for (int i = 0; i < head->main_stack->current_stack_size; i++) {
+  //   dprintf("The %d element of the stack is %d\n", i, head->main_stack->stack_pointer[i]);
+  // }
 
 }
 
