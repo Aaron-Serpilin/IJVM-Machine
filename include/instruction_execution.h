@@ -71,7 +71,7 @@ void instruction_executioner (word_t current_instruction) {
 
         case OP_OUT: //OPCODE 0XFD 
         {
-            char output_value = pop();
+            char output_value = pop(head);
             fprintf(out, "%c", output_value);
             head->main_stack->program_counter++;
             break;

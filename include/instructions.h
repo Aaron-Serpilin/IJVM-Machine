@@ -33,47 +33,47 @@ void duplicate (void) {
 }
 
 void i_add (void) {
-    word_t top_value = pop();
-    word_t new_top_value = pop();
+    word_t top_value = pop(head);
+    word_t new_top_value = pop(head);
     word_t summation_value = top_value + new_top_value;
-    push(summation_value);
+    push(head,summation_value);
     head->main_stack->program_counter++;
 }
 
 void i_sub (void) {
-    word_t top_value = pop();
-    word_t new_top_value = pop();
+    word_t top_value = pop(head);
+    word_t new_top_value = pop(head);
     word_t subtraction_value = new_top_value - top_value;
-    push(subtraction_value);
+    push(head,subtraction_value);
     head->main_stack->program_counter++;
 }
 
 void i_and (void) {
-    word_t top_value = pop();
-    word_t new_top_value = pop();
+    word_t top_value = pop(head);
+    word_t new_top_value = pop(head);
     word_t and_value = top_value & new_top_value;
-    push(and_value);
+    push(head,and_value);
     head->main_stack->program_counter++;
 }
 
 void i_or (void) {
-    word_t top_value = pop();
-    word_t new_top_value = pop();
+    word_t top_value = pop(head);
+    word_t new_top_value = pop(head);
     word_t or_value = top_value | new_top_value;
-    push(or_value);
+    push(head,or_value);
     head->main_stack->program_counter++;
 }
 
 void instruction_pop (void) {
-    pop();
+    pop(head);
     head->main_stack->program_counter++;
 }
 
 void swap (void) {
-    word_t top_value = pop();
-    word_t new_top_value = pop();
-    push(top_value);
-    push(new_top_value);
+    word_t top_value = pop(head);
+    word_t new_top_value = pop(head);
+    push(head,top_value);
+    push(head,new_top_value);
     head->main_stack->program_counter++;
 }
 
@@ -83,7 +83,7 @@ void instruction_input (byte_t input_value) {
         input_value = 0;
     } 
 
-    push((word_t) input_value);
+    push(head,(word_t) input_value);
 
     head->main_stack->program_counter++;
 }
@@ -95,7 +95,7 @@ void go_to (void) {
 }
 
 void if_eq (void) {
-    byte_t top_value = pop();
+    byte_t top_value = pop(head);
     byte_t* branch_pointer = get_text() + (head->main_stack->program_counter+1);
     short branch_offset = read_uint16_t(branch_pointer);
 
@@ -107,7 +107,7 @@ void if_eq (void) {
 }
 
 void iflt (void) {
-    int8_t top_value = pop(); //Need to use int8_t rather than byte_t to check for signed values
+    int8_t top_value = pop(head); //Need to use int8_t rather than byte_t to check for signed values
     byte_t* branch_pointer = get_text() + (head->main_stack->program_counter+1);
     short branch_offset = read_uint16_t(branch_pointer);
 
@@ -119,8 +119,8 @@ void iflt (void) {
 }
 
 void if_icmpeq (void) {
-    byte_t top_value = pop();
-    byte_t new_top_value = pop();
+    byte_t top_value = pop(head);
+    byte_t new_top_value = pop(head);
     byte_t* branch_pointer = get_text() + (head->main_stack->program_counter+1);
     short branch_offset = read_uint16_t(branch_pointer);
 
@@ -135,20 +135,20 @@ void ldc_w (void) {
     byte_t* branch_pointer = get_text() + (head->main_stack->program_counter+1);
     short constant_index = read_uint16_t(branch_pointer);
     word_t targeted_constant = get_constant(constant_index);
-    push(targeted_constant);
+    push(head,targeted_constant);
     head->main_stack->program_counter += 3;
 }
 
 void iload (void) {
     byte_t variable_index = (get_text())[head->main_stack->program_counter+1];
     word_t value_at_index = head->local_variables[variable_index];
-    push(value_at_index);
+    push(head,value_at_index);
     head->main_stack->program_counter += 2;
 }
 
 void istore (void) {
     byte_t variable_index = (get_text())[head->main_stack->program_counter+1];
-    word_t top_value = pop();
+    word_t top_value = pop(head);
     head->local_variables[variable_index] = top_value;
     head->main_stack->program_counter += 2;
 }
@@ -171,7 +171,7 @@ void wide (void) {
         {
             byte_t* extended_index_pointer = get_text() + (head->main_stack->program_counter+2); 
             short extended_index = read_uint16_t(extended_index_pointer);
-            word_t top_value = pop();
+            word_t top_value = pop(head);
             head->local_variables[extended_index] = top_value;
             head->main_stack->program_counter += 4;
             break;
@@ -182,7 +182,7 @@ void wide (void) {
             byte_t* extended_index_pointer = get_text() + (head->main_stack->program_counter+2);
             short extended_index = read_uint16_t(extended_index_pointer);
             word_t value_at_index = head->local_variables[extended_index];
-            push(value_at_index);
+            push(head,value_at_index);
             head->main_stack->program_counter += 4;
             break;
         }
@@ -221,7 +221,7 @@ void invoke_virtual (void) {
     word_t frame_arguments_array[number_arguments];
     
     for (int i = number_arguments - 1; i >= 0; i--) {
-        frame_argument = pop();
+        frame_argument = pop(head);
         frame_arguments_array[i] = frame_argument;
     }
 
@@ -240,11 +240,11 @@ void ireturn (void) {
 
     int new_counter = head->previous_program_counter;
     struct frame* frame_to_be_destroyed = head;
-    word_t frame_return_value = pop();
+    word_t frame_return_value = pop(head);
     head = head->previous_frame_pointer;
     head->main_stack->program_counter = new_counter;
     frame_destroyer(frame_to_be_destroyed);
-    push(frame_return_value);
+    push(head,frame_return_value);
     return;
 
 }
