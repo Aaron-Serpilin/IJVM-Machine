@@ -7,9 +7,7 @@
 #include "util.h" // read this file for debug prints, endianness helper functions
 #include "structs.h" // to access the IJVM struct
 
-extern current_frame * head;
-
-void stack_creator (struct frame* new_frame) {
+struct stack* stack_creator (struct frame* new_frame) {
 
     struct stack *new_stack = NULL;
     new_stack = malloc(sizeof(struct stack));
@@ -20,7 +18,7 @@ void stack_creator (struct frame* new_frame) {
     new_stack->current_stack_size = -1;
     new_stack->finished_stack = false;
 
-    new_frame->main_stack = *new_stack;
+    return new_stack;
 
 }
 
