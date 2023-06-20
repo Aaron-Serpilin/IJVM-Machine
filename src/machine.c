@@ -59,7 +59,6 @@ word_t get_local_variable(int i) { return head->local_variables[i];}
 
 //Executes the current instruction 
 void step(void) { 
-
   word_t instruction = (get_text())[head->main_stack->program_counter]; //Fetches byte by byte of the instruction set
 
   instruction_executioner(instruction);
@@ -70,11 +69,6 @@ void step(void) {
     head->main_stack->finished_stack = true;
   }
 
-
-  // dprintf("\nThe counter is %d\n", head->main_stack->program_counter);
-  // for (int i = 0; i < head->main_stack->current_stack_size; i++) {
-  //   dprintf("The %d element of the stack is %d\n", i, head->main_stack->stack_pointer[i]);
-  // }
 
 }
 

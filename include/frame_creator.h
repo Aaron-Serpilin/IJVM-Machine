@@ -9,7 +9,7 @@
 #include "stack_creator.h"
 
 struct frame* frame_creator (struct frame *head_frame, int number_variables) {
-
+    
     struct frame *new_frame = NULL;
     new_frame = malloc(sizeof(struct frame));
 

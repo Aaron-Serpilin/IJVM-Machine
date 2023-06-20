@@ -29,7 +29,7 @@ int binary_path_data_sorter (char* binary_path, word_t* initial_data_chunks, wor
 
   ijvm_machine.header = initial_data_chunks[0];
 
-  if (ijvm_machine.header != 0x1deadfad) {
+  if (ijvm_machine.header != MAGIC_NUMBER) {
     dprintf("Header is incorrect\n");
     return -1;
   }
@@ -58,7 +58,7 @@ int binary_path_data_sorter (char* binary_path, word_t* initial_data_chunks, wor
 
   ijvm_machine.text_size = text_size[1];
 
-  text_data = malloc(sizeof(word_t) * (ijvm_machine.text_size));
+  text_data = malloc(sizeof(byte_t) * (ijvm_machine.text_size));
 
   fread(text_data, sizeof(word_t), ijvm_machine.text_size, file_pointer); 
 

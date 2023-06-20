@@ -20,7 +20,7 @@ void error (void) {
 void bi_push (void) {
     head->main_stack->current_stack_size++;
     int8_t instruction_value = get_text()[head->main_stack->program_counter+1]; //These two lines read 8-bit values that are negative in 32-bits and should be read as such
-    word_t extended_instruction_value = (word_t)instruction_value;
+    word_t extended_instruction_value = (word_t) instruction_value;
     head->main_stack->stack_pointer[head->main_stack->current_stack_size] = extended_instruction_value;
     head->main_stack->program_counter += 2;
 }
@@ -95,7 +95,7 @@ void go_to (void) {
 }
 
 void if_eq (void) {
-    byte_t top_value = pop(head);
+    word_t top_value = pop(head);
     byte_t* branch_pointer = get_text() + (head->main_stack->program_counter+1);
     short branch_offset = read_uint16_t(branch_pointer);
 
@@ -107,7 +107,7 @@ void if_eq (void) {
 }
 
 void iflt (void) {
-    int8_t top_value = pop(head); //Need to use int8_t rather than byte_t to check for signed values
+    word_t top_value = pop(head); //Need to use int8_t rather than byte_t to check for signed values
     byte_t* branch_pointer = get_text() + (head->main_stack->program_counter+1);
     short branch_offset = read_uint16_t(branch_pointer);
 
@@ -119,8 +119,8 @@ void iflt (void) {
 }
 
 void if_icmpeq (void) {
-    byte_t top_value = pop(head);
-    byte_t new_top_value = pop(head);
+    word_t top_value = pop(head);
+    word_t new_top_value = pop(head);
     byte_t* branch_pointer = get_text() + (head->main_stack->program_counter+1);
     short branch_offset = read_uint16_t(branch_pointer);
 
@@ -208,7 +208,7 @@ void invoke_virtual (void) {
     byte_t* starting_address_pointer = get_text() + (head->main_stack->program_counter+1);
     short starting_address_index = read_uint16_t(starting_address_pointer);
     word_t constant_value = get_constant(starting_address_index);
-    word_t offset = constant_value + 4;
+    short offset = constant_value + 4;
 
     byte_t* number_arguments_pointer = get_text() + (constant_value);
     short number_arguments = read_uint16_t(number_arguments_pointer);
@@ -227,10 +227,22 @@ void invoke_virtual (void) {
         frame_arguments_array[i] = frame_argument;
     }
 
+    // dprintf("\n---ARGUMENTS ARRAY---\n");
+    // for (int i = 0; i < sizeof(frame_arguments_array); i++) {
+    //     dprintf("The %d element of the frame arguments array is %d\n", frame_arguments_array[i]);
+    // }
+    // dprintf("\n---DONE ARGS---\n");
+
     //Adding the arguments to the local variables array
     for (int i = 0; i < number_arguments; i++) {
         head->local_variables[i] = frame_arguments_array[i];
     }
+
+    // dprintf("\n---VARIABLES ARRAY---\n");
+    // for (int i = 0; i < sizeof(head->local_variables); i++) {
+    //     dprintf("The %d element of the variable array is %d\n", head->local_variables[i]);
+    // }
+    // dprintf("\n---DONE VARS---\n");
 
     head->main_stack->program_counter += offset;
 
@@ -245,7 +257,6 @@ void ireturn (void) {
     head->main_stack->program_counter = new_counter;
     frame_destroyer(frame_to_be_destroyed);
     push(head,frame_return_value);
-    return;
 
 }
 
