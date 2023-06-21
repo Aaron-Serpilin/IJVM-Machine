@@ -163,25 +163,25 @@ void iinc (void) {
 
 void wide (void) {
     // We treat the wide instruction and the modified instruction as a single step
-    word_t next_instruction = get_text()[head->main_stack->program_counter+1];
+    word_t next_instruction = (word_t) (get_text()[head->main_stack->program_counter+1]);
 
     switch (next_instruction) {
 
         case OP_ISTORE: 
         {
-            byte_t* extended_index_pointer = get_text() + (head->main_stack->program_counter+2); 
-            word_t extended_index = read_uint16_t(extended_index_pointer);
-            word_t top_value = pop(head);
-            head->local_variables[extended_index] = top_value;
+            byte_t* extended_index_pointer = (byte_t*) (get_text() + (head->main_stack->program_counter+2)); 
+            word_t extended_index = (word_t) read_uint16_t(extended_index_pointer);
+            word_t top_value = (word_t) pop(head);
+            head->local_variables[(word_t) extended_index] = top_value;
             head->main_stack->program_counter += 4;
             break;
         }
             
         case OP_ILOAD: 
         {
-            byte_t* extended_index_pointer = get_text() + (head->main_stack->program_counter+2);
-            word_t extended_index = read_uint16_t(extended_index_pointer);
-            word_t value_at_index = head->local_variables[extended_index];
+            byte_t* extended_index_pointer = (byte_t*) (get_text() + (head->main_stack->program_counter+2));
+            word_t extended_index = (word_t) read_uint16_t(extended_index_pointer);
+            word_t value_at_index = (word_t) head->local_variables[(word_t) extended_index];
             push(head,value_at_index);
             head->main_stack->program_counter += 4;
             break;
@@ -189,11 +189,11 @@ void wide (void) {
             
         case OP_IINC:
         {
-            byte_t* extended_index_pointer = get_text() + (head->main_stack->program_counter+2);
-            word_t extended_index = read_uint16_t(extended_index_pointer);
-            int8_t increment_value = (get_text())[head->main_stack->program_counter+4]; 
+            byte_t* extended_index_pointer = (byte_t*) (get_text() + (head->main_stack->program_counter+2));
+            word_t extended_index = (word_t) read_uint16_t(extended_index_pointer);
+            int8_t increment_value = (int8_t) (get_text())[head->main_stack->program_counter+4]; 
             word_t absolute_increment_value = (word_t) increment_value;
-            head->local_variables[extended_index] += absolute_increment_value;
+            head->local_variables[(word_t) extended_index] += absolute_increment_value;
             head->main_stack->program_counter += 5;
             break;
         }
@@ -211,12 +211,14 @@ void invoke_virtual (void) {
     short offset = constant_value + 4;
 
     byte_t* number_arguments_pointer = get_text() + (constant_value);
-    short number_arguments = read_uint16_t(number_arguments_pointer);
+    word_t number_arguments = read_uint16_t(number_arguments_pointer);
+    byte_t* number_variables_pointer = get_text() + (constant_value+2);
+    word_t number_variables = read_uint16_t(number_variables_pointer);
 
     word_t frame_argument;
     word_t frame_arguments_array[number_arguments];
 
-    head = frame_creator(head, 256);
+    head = frame_creator(head, number_arguments + number_variables + 1);
     
     for (int i = number_arguments - 1; i >= 0; i--) {
         frame_argument = pop(head->previous_frame_pointer);

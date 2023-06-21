@@ -8,6 +8,7 @@
 #include "data_sorter.h" // to read all the binary data and store it accodingly
 #include "stack_creator.h" // to initialize the stack of the current frame
 #include "frame_creator.h" // to initialize the current frame
+#include "frame_destroyer.h" // to destroy the current frame in the destoy ijvm function
 
 FILE *in;   
             
@@ -42,9 +43,7 @@ void destroy_ijvm(void) {
   free(global_variables.text_data);
   free(ijvm_machine.constant_pool_data);
   free(ijvm_machine.text_data);
-  free(head->main_stack->stack_pointer);
-  free(head->previous_frame_pointer);
-  free(head->local_variables);
+  frame_destroyer(head);
 }
 
 byte_t *get_text(void) { return ijvm_machine.text_data;}
