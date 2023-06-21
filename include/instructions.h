@@ -11,24 +11,23 @@
 #include "frame_destroyer.h"
 
 extern current_frame * head;
+FILE *in;             
+FILE *out;
 
 void error (void) {
     dprintf("An error has occurred\n");
     head->main_stack->finished_stack = true;
 }
 
-void bi_push (void) {
-    head->main_stack->current_stack_size++;
-    int8_t instruction_value = get_text()[head->main_stack->program_counter+1]; //These two lines read 8-bit values that are negative in 32-bits and should be read as such
-    word_t extended_instruction_value = instruction_value;
-    head->main_stack->stack_pointer[head->main_stack->current_stack_size] = extended_instruction_value;
+void bi_push (void) { 
+    int8_t instruction_value = get_text()[head->main_stack->program_counter+1]; //By passing the instruction as a word_t parameter in push, nega tive values that wouldn't be in 8-bits are read correctly in 32-bits and obtain the correct leading sign bit
+    push(head,  instruction_value);
     head->main_stack->program_counter += 2;
 }
 
 void duplicate (void) {
     word_t top_value = head->main_stack->stack_pointer[head->main_stack->current_stack_size]; 
-    head->main_stack->current_stack_size++;
-    head->main_stack->stack_pointer[head->main_stack->current_stack_size] = top_value;
+    push(head,  top_value);
     head->main_stack->program_counter++;
 }
 
@@ -36,7 +35,7 @@ void i_add (void) {
     word_t top_value = pop(head);
     word_t new_top_value = pop(head);
     word_t summation_value = top_value + new_top_value;
-    push(head,summation_value);
+    push(head, summation_value);
     head->main_stack->program_counter++;
 }
 
@@ -44,7 +43,7 @@ void i_sub (void) {
     word_t top_value = pop(head);
     word_t new_top_value = pop(head);
     word_t subtraction_value = new_top_value - top_value;
-    push(head,subtraction_value);
+    push(head, subtraction_value);
     head->main_stack->program_counter++;
 }
 
@@ -52,7 +51,7 @@ void i_and (void) {
     word_t top_value = pop(head);
     word_t new_top_value = pop(head);
     word_t and_value = top_value & new_top_value;
-    push(head,and_value);
+    push(head, and_value);
     head->main_stack->program_counter++;
 }
 
@@ -60,7 +59,7 @@ void i_or (void) {
     word_t top_value = pop(head);
     word_t new_top_value = pop(head);
     word_t or_value = top_value | new_top_value;
-    push(head,or_value);
+    push(head, or_value);
     head->main_stack->program_counter++;
 }
 
@@ -72,19 +71,35 @@ void instruction_pop (void) {
 void swap (void) {
     word_t top_value = pop(head);
     word_t new_top_value = pop(head);
-    push(head,top_value);
-    push(head,new_top_value);
+    push(head, top_value);
+    push(head, new_top_value);
     head->main_stack->program_counter++;
 }
 
-void instruction_input (word_t input_value) {
+void halt (void) {
+    head->main_stack->finished_stack = true;
+}
+
+void do_nothing (void) {
+    head->main_stack->program_counter++;
+}
+
+void instruction_input (void) {
+
+    word_t input_value = fgetc(in);
 
     if (input_value == EOF) {
         input_value = 0;
     } 
 
-    push(head, input_value);
+    push(head,  input_value);
 
+    head->main_stack->program_counter++;
+}
+
+void instruction_output (void) {
+    char output_value = pop(head);
+    fprintf(out, "%c", output_value);
     head->main_stack->program_counter++;
 }
 
@@ -135,14 +150,14 @@ void ldc_w (void) {
     byte_t* branch_pointer = get_text() + (head->main_stack->program_counter+1);
     short constant_index = read_uint16_t(branch_pointer);
     word_t targeted_constant = get_constant(constant_index);
-    push(head,targeted_constant);
+    push(head, targeted_constant);
     head->main_stack->program_counter += 3;
 }
 
 void iload (void) {
     byte_t variable_index = (get_text())[head->main_stack->program_counter+1];
     word_t value_at_index = head->local_variables[variable_index];
-    push(head,value_at_index);
+    push(head, value_at_index);
     head->main_stack->program_counter += 2;
 }
 
@@ -169,31 +184,31 @@ void wide (void) {
 
         case OP_ISTORE: 
         {
-            byte_t* extended_index_pointer = (byte_t*) (get_text() + (head->main_stack->program_counter+2)); 
-            word_t extended_index = (word_t) read_uint16_t(extended_index_pointer);
-            word_t top_value = (word_t) pop(head);
-            head->local_variables[(word_t) extended_index] = top_value;
+            byte_t* extended_index_pointer = (get_text() + (head->main_stack->program_counter+2)); 
+            word_t extended_index = read_uint16_t(extended_index_pointer);
+            word_t top_value = pop(head);
+            head->local_variables[extended_index] = top_value;
             head->main_stack->program_counter += 4;
             break;
         }
             
         case OP_ILOAD: 
         {
-            byte_t* extended_index_pointer = (byte_t*) (get_text() + (head->main_stack->program_counter+2));
-            word_t extended_index = (word_t) read_uint16_t(extended_index_pointer);
-            word_t value_at_index = (word_t) head->local_variables[(word_t) extended_index];
-            push(head,value_at_index);
+            byte_t* extended_index_pointer = (get_text() + (head->main_stack->program_counter+2));
+            word_t extended_index = read_uint16_t(extended_index_pointer);
+            word_t value_at_index = head->local_variables[extended_index];
+            push(head, value_at_index);
             head->main_stack->program_counter += 4;
             break;
         }
             
         case OP_IINC:
         {
-            byte_t* extended_index_pointer = (byte_t*) (get_text() + (head->main_stack->program_counter+2));
-            word_t extended_index = (word_t) read_uint16_t(extended_index_pointer);
-            int8_t increment_value = (int8_t) (get_text())[head->main_stack->program_counter+4]; 
-            word_t absolute_increment_value = (word_t) increment_value;
-            head->local_variables[(word_t) extended_index] += absolute_increment_value;
+            byte_t* extended_index_pointer = (get_text() + (head->main_stack->program_counter+2));
+            word_t extended_index = read_uint16_t(extended_index_pointer);
+            int8_t increment_value = (get_text())[head->main_stack->program_counter+4]; 
+            word_t absolute_increment_value = increment_value;
+            head->local_variables[extended_index] += absolute_increment_value;
             head->main_stack->program_counter += 5;
             break;
         }
@@ -218,7 +233,7 @@ void invoke_virtual (void) {
     word_t frame_argument;
     word_t frame_arguments_array[number_arguments];
 
-    head = frame_creator(head, number_arguments + number_variables + 1);
+    head = frame_creator(head, number_variables + number_arguments);
     
     for (int i = number_arguments - 1; i >= 0; i--) {
         frame_argument = pop(head->previous_frame_pointer);
@@ -242,7 +257,7 @@ void ireturn (void) {
     head = head->previous_frame_pointer;
     head->main_stack->program_counter = new_counter;
     frame_destroyer(frame_to_be_destroyed);
-    push(head,frame_return_value);
+    push(head, frame_return_value);
 
 }
 

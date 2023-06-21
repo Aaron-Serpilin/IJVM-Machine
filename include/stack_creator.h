@@ -13,7 +13,10 @@ struct stack* stack_creator (void) {
     new_stack = malloc(sizeof(struct stack));
 
     new_stack->max_stack_size = 1024;
+
     new_stack->stack_pointer = (word_t *) malloc(sizeof(word_t) * new_stack->max_stack_size); 
+    //new_stack->stack_pointer = (word_t *) realloc(new_stack->stack_pointer, sizeof(word_t) * new_stack->max_stack_size);
+    
     new_stack->program_counter = 0;
     new_stack->current_stack_size = -1;
     new_stack->finished_stack = false;

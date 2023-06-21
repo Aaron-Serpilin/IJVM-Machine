@@ -5,13 +5,6 @@
 #include "structs.h"
 #include "util.h" 
 #include "instructions.h"
-#include "stack_functions.h"
-
-FILE *in;             
-FILE *out;
-
-extern current_frame * head;
-extern bool is_finished;
 
 void instruction_executioner (word_t current_instruction) {
     
@@ -54,71 +47,62 @@ void instruction_executioner (word_t current_instruction) {
             break;
 
         case OP_HALT: //OPCODE 0XFF
-        {
-            head->main_stack->finished_stack = true;
+            halt();
             break;
-        }
 
         case OP_NOP: //OPCODE 0X00
-            head->main_stack->program_counter++;
+            do_nothing();
             break;
 
         case OP_IN: //OPCODE 0XFC 
-        {
-            word_t input_value = fgetc(in);
-            instruction_input(input_value);
+            instruction_input();
             break;
-        }
 
         case OP_OUT: //OPCODE 0XFD 
-        {
-            char output_value = pop(head);
-            fprintf(out, "%c", output_value);
-            head->main_stack->program_counter++;
+            instruction_output();
             break;
-        }
         
-        case OP_GOTO:
+        case OP_GOTO: //OPCODE 0XA7
             go_to();
             break;
 
-        case OP_IFEQ:
+        case OP_IFEQ: //OPCODE 0X99
             if_eq();
             break;
 
-        case OP_IFLT:
+        case OP_IFLT: //OPCODE 0X9B
             iflt();
             break;
 
-        case OP_IF_ICMPEQ:
+        case OP_IF_ICMPEQ: //OPCODE 0X9F
             if_icmpeq();
             break;
 
-        case OP_LDC_W:
+        case OP_LDC_W: //OPCODE 0X13
             ldc_w();
             break;
 
-        case OP_ILOAD:
+        case OP_ILOAD: //OPCODE 0X15
             iload();
             break;
 
-        case OP_ISTORE:
+        case OP_ISTORE: //OPCODE 0X36
             istore();
             break;
 
-        case OP_IINC:
+        case OP_IINC: //OPCODE 0X84 
             iinc();
             break;
 
-        case OP_WIDE:
+        case OP_WIDE: //OPCODE 0XC4 
             wide();
             break;
 
-        case OP_INVOKEVIRTUAL:
+        case OP_INVOKEVIRTUAL: //OPCODE 0XB6 
             invoke_virtual();
             break;
         
-        case OP_IRETURN:
+        case OP_IRETURN: //OPCODE 0XAC
             ireturn();
             break;
         

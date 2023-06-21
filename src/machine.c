@@ -71,8 +71,6 @@ void step(void) {
   if (head->main_stack->program_counter >= instruction_size) { //Makes sure the counter does not surpass the size of the instruction set
     head->main_stack->finished_stack = true;
   }
-
-
 }
 
 void run(void) {
@@ -82,8 +80,6 @@ void run(void) {
 }
 
 byte_t get_instruction(void) { return get_text()[get_program_counter()];}
-
-
 
 // int get_call_stack_size(void) 
 // {

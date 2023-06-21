@@ -22,6 +22,13 @@ word_t pop (struct frame *head_frame) {
 void push (struct frame *head_frame, word_t value) {
 
     head_frame->main_stack->current_stack_size++;
+
+    if (head_frame->main_stack->current_stack_size >= head_frame->main_stack->max_stack_size) {
+        head_frame->main_stack->max_stack_size += 1024;
+        head_frame->main_stack->stack_pointer = (word_t *) realloc(head_frame->main_stack->stack_pointer, sizeof(word_t) * head_frame->main_stack->max_stack_size);
+        //head_frame->main_stack->stack_pointer = (word_t *) malloc(sizeof(word_t) * head_frame->main_stack->max_stack_size);
+    } 
+
     head_frame->main_stack->stack_pointer[head_frame->main_stack->current_stack_size] = value;
 
 }
