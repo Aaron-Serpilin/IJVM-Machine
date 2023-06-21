@@ -20,7 +20,7 @@ void error (void) {
 void bi_push (void) {
     head->main_stack->current_stack_size++;
     int8_t instruction_value = get_text()[head->main_stack->program_counter+1]; //These two lines read 8-bit values that are negative in 32-bits and should be read as such
-    word_t extended_instruction_value = (word_t) instruction_value;
+    word_t extended_instruction_value = instruction_value;
     head->main_stack->stack_pointer[head->main_stack->current_stack_size] = extended_instruction_value;
     head->main_stack->program_counter += 2;
 }
@@ -170,7 +170,7 @@ void wide (void) {
         case OP_ISTORE: 
         {
             byte_t* extended_index_pointer = get_text() + (head->main_stack->program_counter+2); 
-            long extended_index = read_uint16_t(extended_index_pointer);
+            word_t extended_index = read_uint16_t(extended_index_pointer);
             word_t top_value = pop(head);
             head->local_variables[extended_index] = top_value;
             head->main_stack->program_counter += 4;
@@ -180,7 +180,7 @@ void wide (void) {
         case OP_ILOAD: 
         {
             byte_t* extended_index_pointer = get_text() + (head->main_stack->program_counter+2);
-            long extended_index = read_uint16_t(extended_index_pointer);
+            word_t extended_index = read_uint16_t(extended_index_pointer);
             word_t value_at_index = head->local_variables[extended_index];
             push(head,value_at_index);
             head->main_stack->program_counter += 4;
@@ -190,7 +190,7 @@ void wide (void) {
         case OP_IINC:
         {
             byte_t* extended_index_pointer = get_text() + (head->main_stack->program_counter+2);
-            long extended_index = read_uint16_t(extended_index_pointer);
+            word_t extended_index = read_uint16_t(extended_index_pointer);
             int8_t increment_value = (get_text())[head->main_stack->program_counter+4]; 
             word_t absolute_increment_value = (word_t) increment_value;
             head->local_variables[extended_index] += absolute_increment_value;
@@ -212,10 +212,6 @@ void invoke_virtual (void) {
 
     byte_t* number_arguments_pointer = get_text() + (constant_value);
     short number_arguments = read_uint16_t(number_arguments_pointer);
-    // byte_t* number_variables_pointer = get_text() + (constant_value+2);
-    // short number_variables = read_uint16_t(number_variables_pointer);
-
-    // short total_number_values = number_arguments + number_variables;
 
     word_t frame_argument;
     word_t frame_arguments_array[number_arguments];
@@ -227,22 +223,10 @@ void invoke_virtual (void) {
         frame_arguments_array[i] = frame_argument;
     }
 
-    // dprintf("\n---ARGUMENTS ARRAY---\n");
-    // for (int i = 0; i < sizeof(frame_arguments_array); i++) {
-    //     dprintf("The %d element of the frame arguments array is %d\n", frame_arguments_array[i]);
-    // }
-    // dprintf("\n---DONE ARGS---\n");
-
     //Adding the arguments to the local variables array
     for (int i = 0; i < number_arguments; i++) {
         head->local_variables[i] = frame_arguments_array[i];
     }
-
-    // dprintf("\n---VARIABLES ARRAY---\n");
-    // for (int i = 0; i < sizeof(head->local_variables); i++) {
-    //     dprintf("The %d element of the variable array is %d\n", head->local_variables[i]);
-    // }
-    // dprintf("\n---DONE VARS---\n");
 
     head->main_stack->program_counter += offset;
 

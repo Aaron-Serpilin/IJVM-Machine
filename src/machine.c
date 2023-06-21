@@ -40,7 +40,11 @@ void destroy_ijvm(void) {
   free(global_variables.pool_data);
   free(global_variables.text_size);
   free(global_variables.text_data);
+  free(ijvm_machine.constant_pool_data);
+  free(ijvm_machine.text_data);
   free(head->main_stack->stack_pointer);
+  free(head->previous_frame_pointer);
+  free(head->local_variables);
 }
 
 byte_t *get_text(void) { return ijvm_machine.text_data;}
@@ -78,17 +82,14 @@ void run(void) {
   }
 }
 
-byte_t get_instruction(void) { 
-  return get_text()[get_program_counter()]; 
-}
+byte_t get_instruction(void) { return get_text()[get_program_counter()];}
 
-// Below: methods needed by bonus assignments, see ijvm.h
 
-//int get_call_stack_size(void) 
-//{
-   // TODO: implement me
-//   return sp;
-//}
+
+// int get_call_stack_size(void) 
+// {
+//   return head->main_stack->current_stack_size;
+// }
 
 
 // Checks if reference is a freed heap array. Note that this assumes that 
