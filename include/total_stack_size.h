@@ -6,17 +6,24 @@
 #include "structs.h"
 #include "util.h" 
 
+extern current_frame * head;
+
 int total_stack_size (void) {
 
     int total_stack_size = 0;
 
-    dprintf("The current stack size is %d\n", head->main_stack->current_stack_size);
-    while (head->previous_frame_pointer != NULL) {
+    //dprintf("The current stack size is %d\n", head->main_stack->current_stack_size);
+    while (head != NULL) {
+
         total_stack_size += head->main_stack->current_stack_size;
+
+        if (head->previous_frame_pointer == NULL) {
+            break;
+        }
         head = head->previous_frame_pointer;
     }
 
-    //dprintf("Total stack size is %d\n", total_stack_size);
+    total_stack_size *= -1;
     return total_stack_size;
 }
 
