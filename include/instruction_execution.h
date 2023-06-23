@@ -105,6 +105,10 @@ void instruction_executioner (word_t current_instruction) {
         case OP_IRETURN: //OPCODE 0XAC
             ireturn();
             break;
+
+        case OP_TAILCALL: //OPCODE 0xCB
+            tailcall();
+            break;
         
         default:
             break;

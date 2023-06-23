@@ -9,6 +9,7 @@
 #include "stack_creator.h" // to initialize the stack of the current frame
 #include "frame_creator.h" // to initialize the current frame
 #include "frame_destroyer.h" // to destroy the current frame in the destoy ijvm function
+#include "total_stack_size.h" // to calculate the total size of all the stacks combined
 
 FILE *in;   
             
@@ -81,11 +82,7 @@ void run(void) {
 
 byte_t get_instruction(void) { return get_text()[get_program_counter()];}
 
-// int get_call_stack_size(void) 
-// {
-//   return head->main_stack->current_stack_size;
-// }
-
+int get_call_stack_size(void) { return total_stack_size();}
 
 // Checks if reference is a freed heap array. Note that this assumes that 
 // 

@@ -3,7 +3,6 @@
 
 #include "ijvm.h"
 
-// Global variables to free space after allocating each time in destroy_ijvm
 struct {
 
   word_t* initial_data_chunks;

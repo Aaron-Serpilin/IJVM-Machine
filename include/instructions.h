@@ -155,14 +155,14 @@ void ldc_w (void) {
 }
 
 void iload (void) {
-    byte_t variable_index = (get_text())[head->main_stack->program_counter+1];
+    word_t variable_index = (get_text())[head->main_stack->program_counter+1];
     word_t value_at_index = head->local_variables[variable_index];
     push(head, value_at_index);
     head->main_stack->program_counter += 2;
 }
 
 void istore (void) {
-    byte_t variable_index = (get_text())[head->main_stack->program_counter+1];
+    word_t variable_index = (get_text())[head->main_stack->program_counter+1];
     word_t top_value = pop(head);
     head->local_variables[variable_index] = top_value;
     head->main_stack->program_counter += 2;
@@ -259,6 +259,42 @@ void ireturn (void) {
     frame_destroyer(frame_to_be_destroyed);
     push(head, frame_return_value);
 
+}
+
+void tailcall (void) {
+    
+    byte_t* starting_address_pointer = get_text() + (head->main_stack->program_counter+1);
+    short starting_address_index = read_uint16_t(starting_address_pointer);
+    word_t constant_value = get_constant(starting_address_index);
+    short offset = constant_value + 4;
+
+    byte_t* number_arguments_pointer = get_text() + (constant_value);
+    word_t number_arguments = read_uint16_t(number_arguments_pointer);
+    byte_t* number_variables_pointer = get_text() + (constant_value+2);
+    word_t number_variables = read_uint16_t(number_variables_pointer);
+
+    word_t frame_argument;
+    word_t frame_arguments_array[number_arguments];
+
+    struct frame* current_frame = head;
+    struct frame* new_return_frame = head->previous_frame_pointer;
+
+    head = frame_creator(head, number_variables + number_arguments);
+    head->previous_program_counter = current_frame->previous_program_counter;
+
+    for (int i = number_arguments - 1; i >= 0; i--) {
+        frame_argument = pop(head->previous_frame_pointer);
+        frame_arguments_array[i] = frame_argument;
+    }
+
+    for (int i = 0; i < number_arguments; i++) {
+        head->local_variables[i] = frame_arguments_array[i];
+    }
+
+    frame_destroyer(current_frame);
+    head->previous_frame_pointer = new_return_frame;
+
+    head->main_stack->program_counter += offset;
 }
 
 #endif
