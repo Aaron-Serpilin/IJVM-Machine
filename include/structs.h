@@ -25,11 +25,11 @@ struct {
 typedef struct heap {
 
   struct heap* previous_heap;
-  word_t* heap_array;
-  int current_heap_size;
+  struct stack* heap_stack;
+  //int current_heap_size;
   int heap_index;
 
-};
+} current_heap;
 
 typedef struct stack {
 

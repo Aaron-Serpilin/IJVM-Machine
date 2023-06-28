@@ -10,8 +10,10 @@
 #include "stack_creator.h"
 #include "heap_creator.h"
 #include "frame_destroyer.h"
+#include "heap_finder.h"
 
 extern current_frame * head;
+extern current_heap * heap;
 FILE *in;             
 FILE *out;
 
@@ -299,15 +301,34 @@ void tailcall (void) {
 }
 
 void new_array (void) {
-    return;
+
+    word_t heap_size = pop(head);
+    heap = heap_creator(heap, heap_size);
+    push(head, heap->heap_index);
+    head->main_stack->program_counter++;
+
 }
 
 void iaload (void) {
-    return;
+
+    word_t array_reference = pop(head);
+    word_t variable_index = pop(head);
+    struct heap *referenced_heap = heap_finder(heap, array_reference);
+    word_t value_at_index = referenced_heap->heap_stack->stack_pointer[variable_index];
+    push(head, value_at_index);
+    head->main_stack->program_counter++;
+
 }
 
 void iastore (void) {
-    return;
+
+    word_t array_reference = pop(head);
+    word_t variable_index = pop(head);
+    word_t top_value = pop(head);
+    struct heap *referenced_heap = heap_finder(heap, array_reference);
+    referenced_heap->heap_stack->stack_pointer[variable_index] = top_value;
+    head->main_stack->program_counter++;
+
 }
 
 #endif

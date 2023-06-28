@@ -6,23 +6,27 @@
 #include "structs.h"
 #include "util.h" 
 
+extern current_frame * head;
+
 int total_stack_size (void) {
 
-    int total_stack_size = 0;
+    int stack_size = 0;
 
-    while (head != NULL) { // I loop through all the stacks until I reach the initial frame before main which is NULL
+    struct frame *current_head = head;
 
-        total_stack_size += head->main_stack->current_stack_size;
+    while (current_head != NULL) { // I loop through all the stacks until I reach the initial frame before main which is NULL
 
-        if (head->previous_frame_pointer == NULL) {
+        stack_size += current_head->main_stack->current_stack_size;
+
+        if (current_head->previous_frame_pointer == NULL) {
             break;
         }
         
-        head = head->previous_frame_pointer;
+        current_head = current_head->previous_frame_pointer;
     }
 
-    total_stack_size *= -1; // I have to do this given that my initial stack size is -1
-    return total_stack_size;
+    stack_size *= -1; // I have to do this given that my initial stack size is -1
+    return stack_size;
 }
 
 #endif

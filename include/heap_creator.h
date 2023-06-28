@@ -6,6 +6,7 @@
 #include "ijvm.h"
 #include "util.h" 
 #include "structs.h" 
+#include "stack_creator.h"
 
 struct heap* heap_creator (struct heap *heap, int number_variables) {
     
@@ -13,8 +14,8 @@ struct heap* heap_creator (struct heap *heap, int number_variables) {
     new_heap = malloc(sizeof(struct heap));
 
     new_heap->previous_heap = heap;
-    new_heap->heap_array = (word_t *) malloc(sizeof(word_t) * number_variables);
-    new_heap->current_heap_size = -1;
+    new_heap->heap_stack = stack_creator();
+    //new_heap->current_heap_size = -1;
     new_heap->heap_index++;
     
     return new_heap;

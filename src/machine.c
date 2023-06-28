@@ -11,16 +11,16 @@
 #include "frame_destroyer.h" // to destroy the current frame in the destoy ijvm function
 #include "total_stack_size.h" // to calculate the total size of all the stacks combined
 
-FILE *in;   
-            
+FILE *in;             
 FILE *out;  
-
 void set_input(FILE *fp) { in = fp; }
-
 void set_output(FILE *fp) { out = fp; }
 
 // Initialization of Head Frame
 struct frame *head = NULL;
+
+//Initialization of Initial Heap
+struct heap *heap = NULL;
 
 int init_ijvm(char *binary_path) {
   in = stdin;
@@ -35,7 +35,6 @@ int init_ijvm(char *binary_path) {
   head = frame_creator(head, 256);
   
   //Initialization of the Heap
-  struct heap *heap = NULL;
   heap = malloc(sizeof(struct heap));
   heap->heap_index = -1;
   heap = heap_creator(heap, 256);
@@ -63,7 +62,7 @@ unsigned int get_program_counter(void) { return head->main_stack->program_counte
 
 word_t tos(void) { return head->main_stack->stack_pointer[head->main_stack->current_stack_size];}
 
-bool finished(void) { return head->main_stack->finished_stack;}
+bool finished(void) { return head->main_stack->finished_stack || heap->heap_stack->finished_stack;}
 
 word_t get_local_variable(int i) { return head->local_variables[i];}
 
