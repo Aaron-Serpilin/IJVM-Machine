@@ -1,1 +1,2 @@
-Please describe any bonuses you implemented (this file is included in your submission)
+Tailcall bonus assignment
+Heap memory bonus assignment

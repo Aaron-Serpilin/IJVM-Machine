@@ -8,6 +8,7 @@
 #include "stack_functions.h"
 #include "frame_creator.h"
 #include "stack_creator.h"
+#include "heap_creator.h"
 #include "frame_destroyer.h"
 
 extern current_frame * head;
@@ -276,11 +277,11 @@ void tailcall (void) {
     word_t frame_argument;
     word_t frame_arguments_array[number_arguments];
 
-    struct frame* current_frame = head;
-    struct frame* new_return_frame = head->previous_frame_pointer;
+    struct frame* intermediate_frame = head; // Store frame to be deleted
+    struct frame* new_return_frame = head->previous_frame_pointer; //Store new frame for head to return to
 
-    head = frame_creator(head, number_variables + number_arguments);
-    head->previous_program_counter = current_frame->previous_program_counter;
+    head = frame_creator(head, number_variables + number_arguments); 
+    head->previous_program_counter = intermediate_frame->previous_program_counter; // Restore head's previous PC to the new_return_frame's PC
 
     for (int i = number_arguments - 1; i >= 0; i--) {
         frame_argument = pop(head->previous_frame_pointer);
@@ -291,10 +292,22 @@ void tailcall (void) {
         head->local_variables[i] = frame_arguments_array[i];
     }
 
-    frame_destroyer(current_frame);
+    frame_destroyer(intermediate_frame); // Clear intermediate frame
     head->previous_frame_pointer = new_return_frame;
 
     head->main_stack->program_counter += offset;
+}
+
+void new_array (void) {
+    return;
+}
+
+void iaload (void) {
+    return;
+}
+
+void iastore (void) {
+    return;
 }
 
 #endif

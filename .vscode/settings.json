@@ -1,3 +1,6 @@
 {
-    "editor.rulers": []
+    "editor.rulers": [],
+    "files.associations": {
+        "ijvm.h": "c"
+    }
 }

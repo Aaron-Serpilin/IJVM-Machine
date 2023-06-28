@@ -109,6 +109,18 @@ void instruction_executioner (word_t current_instruction) {
         case OP_TAILCALL: //OPCODE 0xCB
             tailcall();
             break;
+
+        case OP_NEWARRAY: //OPCODE 0xD1
+            new_array();
+            break;
+
+        case OP_IALOAD: //OPCODE 0xD2
+            iaload();
+            break;
+
+        case OP_IASTORE: //OPCODE 0xD3
+            iastore();
+            break;
         
         default:
             break;

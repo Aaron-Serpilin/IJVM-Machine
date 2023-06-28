@@ -33,6 +33,12 @@ int init_ijvm(char *binary_path) {
   if (head == NULL) {return 1;}
   head->main_stack = stack_creator();
   head = frame_creator(head, 256);
+  
+  //Initialization of the Heap
+  struct heap *heap = NULL;
+  heap = malloc(sizeof(struct heap));
+  heap->heap_index = -1;
+  heap = heap_creator(heap, 256);
 
   return 0;
 }
