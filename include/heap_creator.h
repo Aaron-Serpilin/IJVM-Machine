@@ -14,9 +14,8 @@ struct heap* heap_creator (struct heap *heap, int number_variables) {
     new_heap = malloc(sizeof(struct heap));
 
     new_heap->previous_heap = heap;
-    new_heap->heap_stack = stack_creator();
-    //new_heap->current_heap_size = -1;
-    new_heap->heap_index++;
+    new_heap->heap_array = malloc(sizeof(word_t) * number_variables);
+    new_heap->heap_index = heap->heap_index + 1;
     
     return new_heap;
 

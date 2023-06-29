@@ -25,8 +25,7 @@ struct {
 typedef struct heap {
 
   struct heap* previous_heap;
-  struct stack* heap_stack;
-  //int current_heap_size;
+  word_t* heap_array;
   int heap_index;
 
 } current_heap;

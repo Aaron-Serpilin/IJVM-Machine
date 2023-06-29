@@ -49,6 +49,8 @@ void destroy_ijvm(void) {
   free(global_variables.text_data);
   free(ijvm_machine.constant_pool_data);
   free(ijvm_machine.text_data);
+  free(heap->heap_array);
+  free(heap);
   frame_destroyer(head);
 }
 
@@ -62,7 +64,7 @@ unsigned int get_program_counter(void) { return head->main_stack->program_counte
 
 word_t tos(void) { return head->main_stack->stack_pointer[head->main_stack->current_stack_size];}
 
-bool finished(void) { return head->main_stack->finished_stack || heap->heap_stack->finished_stack;}
+bool finished(void) { return head->main_stack->finished_stack;}
 
 word_t get_local_variable(int i) { return head->local_variables[i];}
 

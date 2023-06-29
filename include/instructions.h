@@ -314,7 +314,7 @@ void iaload (void) {
     word_t array_reference = pop(head);
     word_t variable_index = pop(head);
     struct heap *referenced_heap = heap_finder(heap, array_reference);
-    word_t value_at_index = referenced_heap->heap_stack->stack_pointer[variable_index];
+    word_t value_at_index = referenced_heap->heap_array[variable_index];
     push(head, value_at_index);
     head->main_stack->program_counter++;
 
@@ -326,7 +326,7 @@ void iastore (void) {
     word_t variable_index = pop(head);
     word_t top_value = pop(head);
     struct heap *referenced_heap = heap_finder(heap, array_reference);
-    referenced_heap->heap_stack->stack_pointer[variable_index] = top_value;
+    referenced_heap->heap_array[variable_index] = top_value;
     head->main_stack->program_counter++;
 
 }
